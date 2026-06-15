@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matchday — Réinitialisation du mot de passe</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #181614;
+    color: #fff;
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #1f1d1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 48px;
+    max-width: 440px;
+    width: 100%;
+  }
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 32px;
+  }
+  .logo em { color: #C8F520; font-style: italic; }
+  .title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .field { margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+  }
+  input {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+  }
+  input:focus { border-color: #C8F520; }
+  .btn {
+    width: 100%;
+    background: #C8F520;
+    color: #181614;
+    border: none;
+    padding: 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btn:hover { background: #d4f72a; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error {
+    background: rgba(255,80,80,0.1);
+    border: 1px solid rgba(255,80,80,0.3);
+    color: #ff5050;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .success { text-align: center; }
+  .success-icon { font-size: 48px; margin-bottom: 16px; }
+  .success-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #C8F520;
+  }
+  .success-sub { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+  .link { color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; margin-top: 16px; }
+  .link a { color: #C8F520; cursor: pointer; text-decoration: none; }
+  #formSection, #successSection { display: none; }
+  #invalidSection { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Match<em>day</em></div>
+
+  <div id="formSection">
+    <div class="title">Nouveau mot de passe</div>
+    <div class="error" id="errorMsg"></div>
+    <div class="field">
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="password" placeholder="Minimum 8 caractères" />
+    </div>
+    <div class="field">
+      <label>Confirmer le mot de passe</label>
+      <input type="password" id="password2" placeholder="Répète ton mot de passe" />
+    </div>
+    <button class="btn" id="submitBtn" onclick="handleReset()">Changer le mot de passe →</button>
+    <p class="link"><a href="/">Retour à l'accueil</a></p>
+  </div>
+
+  <div id="successSection">
+    <div class="success">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Mot de passe changé !</div>
+      <div class="success-sub">Tu peux maintenant te connecter avec ton nouveau mot de passe.</div>
+      <button class="btn" onclick="window.location.href='/app'">Se connecter →</button>
+    </div>
+  </div>
+
+  <div id="invalidSection">
+    <div class="success">
+      <div class="success-icon">❌</div>
+      <div class="success-title">Lien invalide</div>
+      <div class="success-sub">Ce lien est invalide ou a expiré.<br>Fais une nouvelle demande.</div>
+      <button class="btn" onclick="window.location.href='/'">Retour à l'accueil →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+
+if (!token) {
+  document.getElementById('invalidSection').style.display = 'block';
+} else {
+  document.getElementById('formSection').style.display = 'block';
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function handleReset() {
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+
+  if (password.length < 8) { showError('Minimum 8 caractères.'); return; }
+  if (password !== password2) { showError('Les mots de passe ne correspondent pas.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Changement en cours...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://matchday-backend-eight.vercel.app/api/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('formSection').style.display = 'none';
+      document.getElementById('successSection').style.display = 'block';
+    } else {
+      showError(data.error || 'Lien invalide ou expiré.');
+      btn.textContent = 'Changer le mot de passe →';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    showError('Erreur de connexion.');
+    btn.textContent = 'Changer le mot de passe →';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
