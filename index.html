@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matchday — Le five sans prise de tête</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:    #181614;
+  --paper:  #F3F1EC;
+  --paper2: #E9E6DF;
+  --paper3: #DEDAD1;
+  --lime:   #C8F520;
+  --red:    #E63012;
+  --blue:   #1B5FDB;
+  --muted:  #8A8378;
+  --line:   rgba(24,22,20,0.1);
+  --lh:     rgba(24,22,20,0.22);
+}
+
+html { scroll-behavior: smooth; font-size: 15px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+/* ======================== NAV ======================== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  height: 56px;
+  background: var(--ink);
+  border-bottom: 2px solid rgba(200,245,32,0.2);
+}
+.nav-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900; font-size: 24px;
+  letter-spacing: -0.5px; text-transform: uppercase;
+  color: #fff; text-decoration: none; line-height: 1;
+}
+.nav-logo em { font-style: italic; color: var(--lime); }
+.nav-links { display: flex; gap: 0; align-items: center; }
+.nav-links a {
+  font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+  text-decoration: none; padding: 0 18px; height: 56px;
+  display: flex; align-items: center;
+  transition: color 0.12s, background 0.12s;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.nav-links a:first-child { border-left: 1px solid rgba(255,255,255,0.06); }
+.nav-links a:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+.nav-cta {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink) !important;
+  background: var(--lime) !important;
+  padding: 0 24px !important; height: 40px !important;
+  display: flex !important; align-items: center !important;
+  border: none !important; margin-left: 16px;
+  transition: background 0.12s !important;
+}
+.nav-cta:hover { background: #b0d818 !important; }
+.nav-auth-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.7) !important;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  padding: 0 20px !important; height: 36px !important;
+  display: flex !important; align-items: center !important;
+  cursor: pointer; margin-left: 8px;
+  transition: all 0.12s !important;
+}
+.nav-auth-btn:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+
+/* ======================== AUTH MODAL ======================== */
+.auth-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+  align-items: flex-start; justify-content: center;
+  padding-top: 56px;
+}
+.auth-overlay.open { display: flex; }
+
+.auth-panel {
+  width: 100%; max-width: 480px;
+  background: var(--ink);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-top: none;
+  animation: slideDown 0.25s ease both;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes slideDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: translateY(0); } }
+
+/* accent top line */
+.auth-panel::before {
+  content: '';
+  display: block; width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--lime), transparent);
+}
+
+.auth-tabs {
+  display: flex; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.auth-tab {
+  flex: 1; padding: 18px 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+  background: none; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.12s;
+}
+.auth-tab.active { color: var(--lime); border-bottom-color: var(--lime); }
+.auth-tab:hover:not(.active) { color: rgba(255,255,255,0.6); }
+
+.auth-body { padding: 32px; }
+.auth-close {
+  position: absolute; top: 14px; right: 16px;
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.3); font-size: 18px; line-height: 1;
+  transition: color 0.12s;
+}
+.auth-close:hover { color: rgba(255,255,255,0.7); }
+
+/* Login screen */
+.auth-section { display: none; }
+.auth-section.active { display: block; }
+
+/* Role selector */
+.role-selector { display: flex; gap: 8px; margin-bottom: 24px; }
+.role-btn {
+  flex: 1; padding: 14px 10px; text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: none; cursor: pointer; transition: all 0.12s;
+}
+.role-btn.active { border-color: var(--lime); background: rgba(200,245,32,0.06); }
+.role-btn-icon { font-size: 20px; margin-bottom: 6px; }
+.role-btn-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.5);
+}
+.role-btn.active .role-btn-label { color: var(--lime); }
+.role-btn-sub { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+/* Form fields */
+.auth-field { margin-bottom: 16px; }
+.auth-label {
+  display: block; font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 8px;
+}
+.auth-input {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff; font-family: 'Barlow', sans-serif;
+  font-size: 14px; padding: 12px 14px;
+  outline: none; transition: border-color 0.12s;
+}
+.auth-input:focus { border-color: rgba(200,245,32,0.5); }
+.auth-input::placeholder { color: rgba(255,255,255,0.2); }
+
+.auth-submit {
+  width: 100%; padding: 15px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 800; letter-spacing: 2.5px;
+  text-transform: uppercase; background: var(--lime); color: var(--ink);
+  border: none; cursor: pointer; margin-top: 8px;
+  transition: background 0.12s;
+}
+.auth-submit:hover { background: #b0d818; }
+
+.auth-hint { font-size: 11px; color: rgba(255,255,255,0.25); text-align: center; margin-top: 14px; }
+.auth-hint a { color: rgba(200,245,32,0.6); text-decoration: none; cursor: pointer; }
+.auth-hint a:hover { color: var(--lime); }
+
+/* Success screen */
+.auth-success {
+  text-align: center; padding: 16px 0;
+}
+.auth-success-icon { font-size: 40px; margin-bottom: 16px; }
+.auth-success-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 26px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: -0.5px; color: var(--lime); margin-bottom: 10px;
+}
+.auth-success-sub { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+/* Error */
+.auth-error {
+  background: rgba(230,48,18,0.12); border: 1px solid rgba(230,48,18,0.3);
+  color: #ff6b4a; font-size: 12px; padding: 10px 12px;
+  margin-bottom: 14px; display: none;
+}
+.auth-error.show { display: block; }
+
+
+/* ======================== HERO ======================== */
+.hero {
+  min-height: 100vh;
+  background: var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  overflow: hidden;
+  padding-top: 56px;
+}
+
+/* left */
+.hero-left {
+  padding: 80px 60px 80px 60px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; z-index: 2;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+.hero-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--lime);
+  margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+}
+.hero-eyebrow::before { content: ''; display: block; width: 28px; height: 2px; background: var(--lime); }
+
+.hero-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900; font-size: clamp(56px, 6vw, 88px);
+  line-height: 0.93; letter-spacing: -2px;
+  text-transform: uppercase; color: #fff;
+  margin-bottom: 28px;
+}
+.hero-title em { font-style: italic; color: var(--lime); display: block; }
+.hero-title .red { color: var(--red); }
+
+.hero-sub {
+  font-size: 15px; color: rgba(255,255,255,0.5);
+  max-width: 380px; line-height: 1.6;
+  margin-bottom: 40px; font-weight: 300;
+}
+.hero-sub strong { color: rgba(255,255,255,0.85); font-weight: 500; }
+
+.hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.btn-hero-primary {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink);
+  background: var(--lime); border: none; cursor: pointer;
+  padding: 14px 32px; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background 0.12s, transform 0.1s;
+}
+.btn-hero-primary:hover { background: #b0d818; transform: translateY(-1px); }
+.btn-hero-ghost {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.5);
+  background: none; border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer; padding: 14px 28px; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.12s;
+}
+.btn-hero-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+.hero-stats {
+  display: flex; gap: 0; margin-top: 56px;
+  border-top: 1px solid rgba(255,255,255,0.08); padding-top: 32px;
+}
+.hs-item { flex: 1; padding-right: 24px; border-right: 1px solid rgba(255,255,255,0.08); margin-right: 24px; }
+.hs-item:last-child { border-right: none; margin-right: 0; }
+.hs-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 36px; font-weight: 900; line-height: 1;
+  letter-spacing: -1px; color: #fff;
+}
+.hs-num .unit { font-size: 18px; color: var(--lime); }
+.hs-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+/* right — live matches preview */
+.hero-right {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 50px;
+  position: relative;
+}
+.hr-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,0.25);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); display: inline-block; animation: blink 1.4s infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+.match-preview-card {
+  border: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 10px; overflow: hidden;
+  transition: border-color 0.15s;
+  animation: slideCard 0.5s ease both;
+}
+.match-preview-card:hover { border-color: rgba(255,255,255,0.25); }
+.match-preview-card:nth-child(2) { animation-delay: 0.1s; }
+.match-preview-card:nth-child(3) { animation-delay: 0.2s; }
+.match-preview-card:nth-child(4) { animation-delay: 0.3s; }
+@keyframes slideCard { from { opacity:0; transform: translateX(16px); } to { opacity:1; transform: translateX(0); } }
+
+.mpc-head {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 10px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.mpc-venue { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); }
+.mpc-loc { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+.mpc-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; padding: 3px 8px;
+}
+.mpc-tag-open { background: rgba(200,245,32,0.15); color: var(--lime); }
+.mpc-tag-conf { background: rgba(46,204,113,0.15); color: #2ECC71; }
+.mpc-body { padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+.mpc-team { flex: 1; }
+.mpc-team-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); }
+.mpc-stars { font-size: 10px; color: var(--lime); margin-top: 1px; }
+.mpc-vs {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 900; letter-spacing: 1px;
+  color: rgba(255,255,255,0.2); flex-shrink: 0;
+}
+.mpc-empty { font-size: 11px; color: rgba(255,255,255,0.2); font-style: italic; flex: 1; }
+.mpc-time { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; margin-top: 6px; }
+
+/* diagonal accent */
+.hero-right::before {
+  content: '';
+  position: absolute; top: -100px; right: -100px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(200,245,32,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ======================== MARQUEE ======================== */
+.marquee-strip {
+  background: var(--lime);
+  padding: 14px 0; overflow: hidden; white-space: nowrap;
+  border-top: none; border-bottom: 2px solid var(--ink);
+}
+.marquee-inner {
+  display: inline-block;
+  animation: marquee 18s linear infinite;
+}
+.marquee-inner span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--ink);
+  padding: 0 28px;
+}
+.marquee-inner span::after { content: '·'; padding-left: 28px; opacity: 0.4; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ======================== HOW IT WORKS ======================== */
+.section { padding: 100px 60px; }
+.section-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 16px; margin-bottom: 0;
+}
+.section-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(40px, 4.5vw, 64px); font-weight: 900;
+  letter-spacing: -2px; line-height: 0.95; text-transform: uppercase;
+}
+.section-title em { font-style: italic; color: var(--muted); }
+
+.steps-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--line);
+}
+.step-col {
+  padding: 40px 32px;
+  border-right: 1px solid var(--line);
+  position: relative;
+}
+.step-col:last-child { border-right: none; }
+.step-num-big {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 72px; font-weight: 900; line-height: 1;
+  letter-spacing: -3px; color: var(--paper3);
+  margin-bottom: 16px;
+}
+.step-icon { font-size: 24px; margin-bottom: 14px; }
+.step-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.3px; margin-bottom: 10px; line-height: 1.1;
+}
+.step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; font-weight: 300; }
+
+/* ======================== FEATURES ALTERNÉE ======================== */
+.feature-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+}
+.feature-row.reverse { direction: rtl; }
+.feature-row.reverse > * { direction: ltr; }
+.feature-text {
+  padding: 72px 60px;
+  display: flex; flex-direction: column; justify-content: center;
+  border-right: 1px solid var(--line);
+}
+.feature-row.reverse .feature-text { border-right: none; border-left: 1px solid var(--line); }
+.feature-visual {
+  background: var(--ink); padding: 60px 50px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.feat-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 800; letter-spacing: 3px;
+  text-transform: uppercase; background: var(--lime); color: var(--ink);
+  padding: 4px 10px; display: inline-block; margin-bottom: 20px;
+}
+.feat-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(32px, 3.5vw, 50px); font-weight: 900;
+  letter-spacing: -1.5px; line-height: 0.95; text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.feat-title em { font-style: italic; color: var(--muted); }
+.feat-desc { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 400px; font-weight: 300; }
+.feat-desc strong { color: var(--ink); font-weight: 600; }
+
+/* feature visuals */
+.fv-match-sheet { }
+.fvs-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.fvs-row:last-child { border-bottom: none; }
+.fvs-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 900; color: rgba(255,255,255,0.2);
+  width: 24px; flex-shrink: 0;
+}
+.fvs-id {
+  width: 32px; height: 32px; background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.6);
+  flex-shrink: 0;
+}
+.fvs-id.on { background: var(--lime); color: var(--ink); }
+.fvs-id.res { background: rgba(27,95,219,0.3); color: var(--blue); }
+.fvs-name { flex: 1; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7); }
+.fvs-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 2px 7px;
+}
+.fvs-badge.feuille { background: rgba(200,245,32,0.15); color: var(--lime); }
+.fvs-badge.reserve { background: rgba(27,95,219,0.2); color: #6B9EFF; }
+.fvs-pts { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; color: rgba(255,255,255,0.3); }
+.fvs-pts.on { color: var(--lime); }
+
+.fv-slots { }
+.fv-five-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 800; color: #fff;
+  text-transform: uppercase; letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+.fv-five-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: 18px; }
+.fv-slot-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.fvsg-slot {
+  font-size: 11px; font-weight: 600;
+  padding: 6px 12px; border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7); cursor: default;
+}
+.fvsg-slot.avail { border-color: rgba(200,245,32,0.3); color: var(--lime); }
+.fvsg-slot.taken { opacity: 0.3; text-decoration: line-through; border-color: rgba(255,255,255,0.05); }
+.fvsg-slot.md { border-color: rgba(27,95,219,0.4); color: #6B9EFF; }
+
+/* pay visual */
+.fv-pay { }
+.fv-pay-opt {
+  border: 1px solid rgba(255,255,255,0.1); padding: 16px;
+  margin-bottom: 10px; transition: border-color 0.12s;
+}
+.fv-pay-opt.active { border-color: var(--lime); }
+.fvpo-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.fvpo-amt {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 30px; font-weight: 900; letter-spacing: -1px;
+  color: #fff; line-height: 1;
+}
+.fvpo-amt.active { color: var(--lime); }
+.fvpo-desc { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+/* ======================== PRICING ======================== */
+.pricing-section { padding: 100px 60px; background: var(--paper2); }
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border: 2px solid var(--ink); margin-top: 0;
+}
+.pricing-card { padding: 40px 36px; border-right: 1px solid var(--ink); }
+.pricing-card:last-child { border-right: none; }
+.pricing-card.featured { background: var(--ink); }
+.pc-role { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+.pricing-card.featured .pc-role { color: rgba(255,255,255,0.4); }
+.pc-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: -0.5px; margin-bottom: 6px;
+}
+.pricing-card.featured .pc-title { color: #fff; }
+.pc-price {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 52px; font-weight: 900; letter-spacing: -2px;
+  line-height: 1; margin-bottom: 4px;
+}
+.pricing-card.featured .pc-price { color: var(--lime); }
+.pc-price sub { font-size: 18px; font-weight: 600; vertical-align: baseline; letter-spacing: 0; }
+.pc-price-desc { font-size: 11px; color: var(--muted); margin-bottom: 28px; font-weight: 500; letter-spacing: 0.5px; }
+.pricing-card.featured .pc-price-desc { color: rgba(255,255,255,0.35); }
+.pc-features { list-style: none; }
+.pc-features li {
+  font-size: 13px; padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: flex-start; gap: 10px; font-weight: 300;
+}
+.pricing-card.featured .pc-features li { border-color: rgba(255,255,255,0.07); color: rgba(255,255,255,0.65); }
+.pc-features li::before { content: '→'; font-weight: 700; flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+.pricing-card.featured .pc-features li::before { color: var(--lime); }
+.pc-features li:last-child { border-bottom: none; }
+.pc-cta {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; display: block; width: 100%;
+  padding: 14px; text-align: center; margin-top: 28px;
+  border: 2px solid var(--ink); background: none; color: var(--ink);
+  cursor: pointer; text-decoration: none; transition: all 0.12s;
+}
+.pc-cta:hover { background: var(--ink); color: var(--lime); }
+.pricing-card.featured .pc-cta { background: var(--lime); color: var(--ink); border-color: var(--lime); }
+.pricing-card.featured .pc-cta:hover { background: #b0d818; }
+
+/* ======================== TESTIMONIALS ======================== */
+.testimony-section { padding: 100px 0; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); overflow: hidden; }
+.testimony-header { padding: 0 60px; margin-bottom: 48px; }
+.testimony-scroll { display: flex; gap: 0; overflow-x: auto; padding: 0 60px; scroll-snap-type: x mandatory; }
+.testimony-scroll::-webkit-scrollbar { display: none; }
+.testimony-card {
+  flex-shrink: 0; width: 380px; margin-right: 1px;
+  border: 1px solid var(--lh); padding: 32px;
+  scroll-snap-align: start; background: var(--paper);
+}
+.tc-quote {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px; font-style: italic; font-weight: 700;
+  line-height: 1.2; letter-spacing: -0.3px; margin-bottom: 20px;
+  color: var(--ink);
+}
+.tc-quote .highlight { color: var(--red); }
+.tc-author { font-size: 12px; font-weight: 600; }
+.tc-team { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.tc-rating { color: var(--lime); font-size: 13px; margin-bottom: 16px; }
+.tc-bg-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 120px; font-weight: 900; line-height: 1;
+  color: var(--paper2); position: absolute; bottom: 16px; right: 16px;
+  pointer-events: none; letter-spacing: -4px;
+}
+
+/* ======================== CTA FINALE ======================== */
+.cta-section {
+  background: var(--ink); padding: 100px 60px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+  align-items: center;
+}
+.cta-left .cta-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 16px; }
+.cta-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(48px, 5vw, 76px); font-weight: 900;
+  letter-spacing: -2.5px; line-height: 0.9; text-transform: uppercase; color: #fff;
+  margin-bottom: 28px;
+}
+.cta-title em { font-style: italic; color: var(--lime); }
+.cta-title .red { color: var(--red); display: block; }
+.cta-sub { font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 300; max-width: 400px; line-height: 1.7; }
+.cta-actions { display: flex; gap: 12px; align-items: center; margin-top: 36px; }
+
+.cta-right { }
+.cta-checklist { }
+.cta-check-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.cta-check-item:last-child { border-bottom: none; }
+.cci-mark {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 900; color: var(--lime);
+  width: 20px; flex-shrink: 0; margin-top: 1px;
+}
+.cci-text { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; font-weight: 300; }
+.cci-text strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+
+/* ======================== FOOTER ======================== */
+footer {
+  background: var(--ink); color: rgba(255,255,255,0.3);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 24px 60px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: -0.3px; color: rgba(255,255,255,0.5);
+}
+.footer-logo em { color: var(--lime); font-style: italic; }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.25); text-decoration: none; transition: color 0.12s; }
+.footer-links a:hover { color: rgba(255,255,255,0.55); }
+.footer-copy { font-size: 11px; letter-spacing: 0.5px; }
+
+/* ======================== SCROLL ANIMATION ======================== */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ======================== RESPONSIVE ======================== */
+@media (max-width: 900px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .hero-left { padding: 60px 28px; }
+  .section { padding: 64px 28px; }
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .feature-row, .feature-row.reverse { grid-template-columns: 1fr; direction: ltr; }
+  .feature-visual { display: none; }
+  .feature-text { padding: 52px 28px; border-right: none; border-left: none !important; }
+  .pricing-grid { grid-template-columns: 1fr; border: 1px solid var(--ink); }
+  .pricing-card { border-right: none; border-bottom: 1px solid var(--ink); }
+  .cta-section { grid-template-columns: 1fr; padding: 64px 28px; }
+  .testimony-header { padding: 0 28px; }
+  footer { flex-direction: column; gap: 16px; padding: 28px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ======================== NAV ======================== -->
+<nav>
+  <a href="#" class="nav-logo">Match<em>day</em></a>
+  <div class="nav-links">
+    <a href="#comment">Comment ça marche</a>
+    <a href="#fonctions">Fonctionnalités</a>
+    <a href="#tarifs">Tarifs</a>
+    <a href="#gerants">Gérants</a>
+    <button class="nav-auth-btn" onclick="openAuth()">Connexion / Inscription</button>
+    <a href="/app" class="nav-cta">Accéder à l'app →</a>
+  </div>
+</nav>
+
+<!-- ======================== HERO ======================== -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Football 5 · Padel · Paris & environs</div>
+    <h1 class="hero-title">
+      Trouve<br>ton <em>match</em><br><span class="red">ce soir.</span>
+    </h1>
+    <p class="hero-sub">
+      Réserve un créneau dans un Five partenaire,
+      <strong>trouve un adversaire en quelques clics</strong>
+      et joue. Acompte de 20€/équipe pour bloquer, le reste sur place.
+    </p>
+    <div class="hero-actions">
+      <a href="/app" class="btn-hero-primary">Trouver un match →</a>
+      <a href="#comment" class="btn-hero-ghost">Comment ça marche</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hs-item">
+        <div class="hs-num">340<span class="unit">+</span></div>
+        <div class="hs-label">Matchs / mois</div>
+      </div>
+      <div class="hs-item">
+        <div class="hs-num">28</div>
+        <div class="hs-label">Fives partenaires</div>
+      </div>
+      <div class="hs-item">
+        <div class="hs-num">4.8</div>
+        <div class="hs-label">Note moyenne</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hr-label"><span class="live-dot"></span>Matchs disponibles maintenant</div>
+    <div class="match-preview-card">
+      <div class="mpc-head">
+        <div><div class="mpc-venue">Five Arena Pigalle</div><div class="mpc-loc">Paris 9e · Sam 19 avr. · 19h</div></div>
+        <span class="mpc-tag mpc-tag-open">En attente</span>
+      </div>
+      <div class="mpc-body">
+        <div class="mpc-team"><div class="mpc-team-name">Les Torpilles FC</div><div class="mpc-stars">★★★</div></div>
+        <div class="mpc-vs">VS</div>
+        <div class="mpc-empty">Votre équipe ici ?</div>
+      </div>
+    </div>
+    <div class="match-preview-card">
+      <div class="mpc-head">
+        <div><div class="mpc-venue">UrbanFive Oberkampf</div><div class="mpc-loc">Paris 11e · Mer 23 avr. · 20h</div></div>
+        <span class="mpc-tag mpc-tag-conf">Confirmé ✓</span>
+      </div>
+      <div class="mpc-body">
+        <div class="mpc-team"><div class="mpc-team-name">Les Rockets 75</div><div class="mpc-stars">★★★</div></div>
+        <div class="mpc-vs">VS</div>
+        <div class="mpc-team"><div class="mpc-team-name">City Panthers</div><div class="mpc-stars">★★</div></div>
+      </div>
+    </div>
+    <div class="match-preview-card">
+      <div class="mpc-head">
+        <div><div class="mpc-venue">Five Nation Bercy</div><div class="mpc-loc">Paris 12e · Ven 25 avr. · 18h30</div></div>
+        <span class="mpc-tag mpc-tag-open">En attente</span>
+      </div>
+      <div class="mpc-body">
+        <div class="mpc-team"><div class="mpc-team-name">Nord United</div><div class="mpc-stars">★★★★</div></div>
+        <div class="mpc-vs">VS</div>
+        <div class="mpc-empty">Votre équipe ici ?</div>
+      </div>
+    </div>
+    <div class="match-preview-card">
+      <div class="mpc-head">
+        <div><div class="mpc-venue">Le Five République</div><div class="mpc-loc">Paris 10e · Dim 27 avr. · 10h</div></div>
+        <span class="mpc-tag mpc-tag-open">En attente</span>
+      </div>
+      <div class="mpc-body">
+        <div class="mpc-team"><div class="mpc-team-name">Les Débutants</div><div class="mpc-stars">★</div></div>
+        <div class="mpc-vs">VS</div>
+        <div class="mpc-empty">Votre équipe ici ?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== MARQUEE ======================== -->
+<div class="marquee-strip" aria-hidden="true">
+  <div class="marquee-inner">
+    <span>Football 5</span><span>Padel</span><span>Trouve ton adversaire</span><span>20€ par équipe</span><span>28 Fives partenaires</span><span>Paris · Lyon · Bordeaux</span><span>Joue ce soir</span><span>Feuille de match</span><span>Points & classement</span>
+    <span>Football 5</span><span>Padel</span><span>Trouve ton adversaire</span><span>20€ par équipe</span><span>28 Fives partenaires</span><span>Paris · Lyon · Bordeaux</span><span>Joue ce soir</span><span>Feuille de match</span><span>Points & classement</span>
+  </div>
+</div>
+
+<!-- ======================== HOW IT WORKS ======================== -->
+<section class="section" id="comment">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-eyebrow">Le principe</div>
+      <div class="section-title">Comment<br><em>ça marche</em></div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);max-width:300px;text-align:right;font-weight:300;line-height:1.6;">De la réservation au coup de sifflet, tout en moins de 3 minutes.</div>
+  </div>
+  <div class="steps-grid">
+    <div class="step-col reveal">
+      <div class="step-num-big">01</div>
+      <div class="step-icon">🏟️</div>
+      <div class="step-title">Choisis<br>ton Five</div>
+      <div class="step-desc">Sélectionne un Five partenaire près de toi. Consulte ses créneaux disponibles — ceux de leur propre calendrier sont automatiquement exclus.</div>
+    </div>
+    <div class="step-col reveal" style="transition-delay:0.1s;">
+      <div class="step-num-big">02</div>
+      <div class="step-icon">📅</div>
+      <div class="step-title">Crée<br>le match</div>
+      <div class="step-desc">Publie ton match sur un créneau libre. Acompte de <strong>20€</strong> pour réserver. L'adversaire paie pareil de son côté.</div>
+    </div>
+    <div class="step-col reveal" style="transition-delay:0.2s;">
+      <div class="step-num-big">03</div>
+      <div class="step-icon">⚡</div>
+      <div class="step-title">Invite<br>tes joueurs</div>
+      <div class="step-desc">Invite tes coéquipiers sur la feuille de match ou en liste de présence. Réservé = présent, même hors feuille. Chacun accumule des points.</div>
+    </div>
+    <div class="step-col reveal" style="transition-delay:0.3s;">
+      <div class="step-num-big">04</div>
+      <div class="step-icon">⚽</div>
+      <div class="step-title">Joue<br>et progresse</div>
+      <div class="step-desc">Le jour J, règle le reste sur place ou tout en ligne. Gagnez des points, montez de niveau, construisez votre palmarès.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== FEATURES ======================== -->
+<div id="fonctions" style="border-top: 2px solid var(--ink);">
+
+  <!-- Feature 1 : Feuille de match -->
+  <div class="feature-row">
+    <div class="feature-text reveal">
+      <span class="feat-tag">Joueurs</span>
+      <div class="feat-title">La feuille<br><em>de match</em></div>
+      <p class="feat-desc">
+        Le capitaine gère qui est sur la feuille officielle et qui vient juste assister.
+        <strong>Tout le monde qui se pointe peut être enregistré</strong> — feuille ou pas — et accumuler des points pour son niveau.
+        Plus besoin de laisser quelqu'un sur le carreau.
+      </p>
+      <p class="feat-desc" style="margin-top:14px;">Sur la feuille : <strong>+12 pts</strong>. En présence hors feuille : <strong>+6 pts</strong>. Chaque match compte.</p>
+    </div>
+    <div class="feature-visual">
+      <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:16px;">Feuille de match — Les Torpilles FC</div>
+      <div class="fv-match-sheet">
+        <div class="fvs-row">
+          <div class="fvs-num">1</div>
+          <div class="fvs-id on">KD</div>
+          <div class="fvs-name">Kévin D. <span style="font-size:10px;opacity:0.4;">(capitaine)</span></div>
+          <span class="fvs-badge feuille">Feuille</span>
+          <div class="fvs-pts on">+12</div>
+        </div>
+        <div class="fvs-row">
+          <div class="fvs-num">2</div>
+          <div class="fvs-id on">YA</div>
+          <div class="fvs-name">Yassine A.</div>
+          <span class="fvs-badge feuille">Feuille</span>
+          <div class="fvs-pts on">+12</div>
+        </div>
+        <div class="fvs-row">
+          <div class="fvs-num">3</div>
+          <div class="fvs-id on">MB</div>
+          <div class="fvs-name">Moussa B.</div>
+          <span class="fvs-badge feuille">Feuille</span>
+          <div class="fvs-pts on">+12</div>
+        </div>
+        <div class="fvs-row">
+          <div class="fvs-num" style="opacity:0.4;">4</div>
+          <div class="fvs-id res">TL</div>
+          <div class="fvs-name" style="color:rgba(255,255,255,0.4);">Thomas L.</div>
+          <span class="fvs-badge reserve">Présence</span>
+          <div class="fvs-pts" style="color:#6B9EFF;">+6</div>
+        </div>
+        <div class="fvs-row" style="border-bottom:none;">
+          <div class="fvs-num" style="opacity:0.4;">5</div>
+          <div class="fvs-id" style="opacity:0.3;">?</div>
+          <div class="fvs-name" style="color:rgba(255,255,255,0.2);font-style:italic;">Place libre</div>
+          <span style="font-size:10px;color:rgba(255,255,255,0.2);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;">INVITER →</span>
+          <div class="fvs-pts">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature 2 : Créneaux Five -->
+  <div class="feature-row reverse">
+    <div class="feature-text reveal">
+      <span class="feat-tag">Réservation</span>
+      <div class="feat-title">Les créneaux<br><em>du Five</em></div>
+      <p class="feat-desc">
+        Chaque Five partenaire connecte son calendrier. Tu vois uniquement
+        <strong>les créneaux vraiment disponibles</strong> — les autres sont masqués car déjà occupés par les réservations propres du Five.
+      </p>
+      <p class="feat-desc" style="margin-top:14px;">Plus de collision, plus d'erreur. Le créneau que tu réserves est <strong>garanti</strong>.</p>
+    </div>
+    <div class="feature-visual">
+      <div class="fv-slots">
+        <div class="fv-five-name">Five Arena Pigalle</div>
+        <div class="fv-five-sub">📍 Paris 9e · 80€/h</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px;">🟢 Créneaux disponibles</div>
+        <div class="fv-slot-grid" style="margin-bottom:14px;">
+          <span class="fvsg-slot avail">Sam 19 · 17h</span>
+          <span class="fvsg-slot avail">Sam 19 · 21h</span>
+          <span class="fvsg-slot avail">Dim 20 · 12h</span>
+          <span class="fvsg-slot avail">Mer 23 · 18h</span>
+        </div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B9EFF;margin-bottom:8px;">🔵 Déjà sur Matchday</div>
+        <div class="fv-slot-grid" style="margin-bottom:14px;">
+          <span class="fvsg-slot md">Sam 19 · 19h</span>
+        </div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-bottom:8px;">⛔ Réservés par le Five</div>
+        <div class="fv-slot-grid">
+          <span class="fvsg-slot taken">Dim 20 · 10h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature 3 : Paiement -->
+  <div class="feature-row">
+    <div class="feature-text reveal">
+      <span class="feat-tag">Paiement</span>
+      <div class="feat-title">20€ pour<br><em>bloquer,</em><br>le reste<br><em>sur place</em></div>
+      <p class="feat-desc">
+        Chaque équipe règle <strong>20€ d'acompte en ligne</strong> pour confirmer le match. Le reste du terrain (généralement 60€) se paye le jour J sur place.
+      </p>
+      <p class="feat-desc" style="margin-top:14px;">Envie de tout régler en avance ? L'option <strong>paiement total</strong> est aussi disponible — pratique pour ne pas avoir à sortir le cash le soir du match.</p>
+    </div>
+    <div class="feature-visual">
+      <div class="fv-pay">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:14px;">Choisir le mode de paiement</div>
+        <div class="fv-pay-opt active">
+          <div class="fvpo-label">Acompte par équipe</div>
+          <div class="fvpo-amt active">20€</div>
+          <div class="fvpo-desc">Payez maintenant, reste sur place le jour du match</div>
+        </div>
+        <div class="fv-pay-opt">
+          <div class="fvpo-label">Paiement total</div>
+          <div class="fvpo-amt">40€</div>
+          <div class="fvpo-desc">Votre part complète en ligne, rien à payer sur place</div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,0.08);padding:12px 14px;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);"><span style="color:rgba(255,255,255,0.35);">Terrain (1h)</span><span style="color:rgba(255,255,255,0.6);">80€</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);"><span style="color:rgba(255,255,255,0.35);">Votre part</span><span style="color:rgba(255,255,255,0.6);">40€</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;font-weight:700;"><span style="color:rgba(255,255,255,0.5);">À payer maintenant</span><span style="color:var(--lime);">20€</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== PRICING ======================== -->
+<section class="pricing-section" id="tarifs">
+  <div class="section-header reveal" style="margin-bottom:40px;">
+    <div>
+      <div class="section-eyebrow">Tarifs</div>
+      <div class="section-title">Simple<br><em>et transparent</em></div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);max-width:280px;text-align:right;font-weight:300;line-height:1.6;">Pas d'abonnement caché. Vous payez le créneau, c'est tout.</div>
+  </div>
+  <div class="pricing-grid reveal">
+    <div class="pricing-card">
+      <div class="pc-role">Joueur · Rejoindre</div>
+      <div class="pc-title">Acompte</div>
+      <div class="pc-price">20<sub>€</sub></div>
+      <div class="pc-price-desc">Par équipe pour réserver</div>
+      <ul class="pc-features">
+        <li>Bloque le créneau immédiatement</li>
+        <li>Reste du terrain payé sur place</li>
+        <li>Confirmation email instantanée</li>
+        <li>Annulation jusqu'à 24h avant</li>
+        <li>Feuille de match incluse</li>
+      </ul>
+      <a href="/app" class="pc-cta">Trouver un match</a>
+    </div>
+    <div class="pricing-card featured">
+      <div class="pc-role">Joueur · Tout en ligne</div>
+      <div class="pc-title">Paiement<br>total</div>
+      <div class="pc-price">40<sub>€</sub></div>
+      <div class="pc-price-desc">Votre part complète en avance</div>
+      <ul class="pc-features">
+        <li>Zéro cash le jour du match</li>
+        <li>Confirmation immédiate</li>
+        <li>Priorité sur les créneaux populaires</li>
+        <li>Points bonus ×1.1</li>
+        <li>Feuille de match + stats détaillées</li>
+      </ul>
+      <a href="/app" class="pc-cta">Commencer →</a>
+    </div>
+    <div class="pricing-card" id="gerants">
+      <div class="pc-role">Gérant de Five</div>
+      <div class="pc-title">Commission<br>uniquement</div>
+      <div class="pc-price">10<sub>%</sub></div>
+      <div class="pc-price-desc">Sur chaque réservation générée</div>
+      <ul class="pc-features">
+        <li>0€ d'inscription, 0€ fixe</li>
+        <li>Publie tes créneaux libres</li>
+        <li>Gère ton calendrier intégré</li>
+        <li>Dashboard revenus en temps réel</li>
+        <li>Avis joueurs après chaque match</li>
+      </ul>
+      <a href="#" class="pc-cta">Rejoindre en tant que Five</a>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== TESTIMONIALS ======================== -->
+<section class="testimony-section">
+  <div class="testimony-header">
+    <div class="section-eyebrow">Ce qu'ils disent</div>
+    <div class="section-title reveal">Ils <em>jouent</em><br>déjà.</div>
+  </div>
+  <div class="testimony-scroll">
+    <div class="testimony-card" style="position:relative;overflow:hidden;">
+      <div class="tc-rating">★★★★★</div>
+      <div class="tc-quote">"On cherchait un adversaire depuis <span class="highlight">3 semaines.</span> Là on a trouvé en 10 minutes."</div>
+      <div class="tc-author">Karim B.</div>
+      <div class="tc-team">Les Torpilles FC · Paris 9e</div>
+      <div class="tc-bg-num">5</div>
+    </div>
+    <div class="testimony-card" style="position:relative;overflow:hidden;">
+      <div class="tc-rating">★★★★★</div>
+      <div class="tc-quote">"Le système de feuille de match c'est top, mes gars qui se pointent en rab peuvent <span class="highlight">quand même avoir leurs points.</span>"</div>
+      <div class="tc-author">Yacine D.</div>
+      <div class="tc-team">City Panthers · Paris 11e</div>
+      <div class="tc-bg-num">5</div>
+    </div>
+    <div class="testimony-card" style="position:relative;overflow:hidden;background:var(--ink);color:#fff;">
+      <div class="tc-rating">★★★★★</div>
+      <div class="tc-quote" style="color:#fff;">"Les créneaux en temps réel, <span style="color:var(--lime);">ça m'a évité de réserver en double</span> avec mes propres clients."</div>
+      <div class="tc-author" style="color:rgba(255,255,255,0.7);">Samir A.</div>
+      <div class="tc-team" style="color:rgba(255,255,255,0.35);">Gérant · Five Nation Bercy</div>
+      <div class="tc-bg-num" style="color:rgba(255,255,255,0.06);">5</div>
+    </div>
+    <div class="testimony-card" style="position:relative;overflow:hidden;">
+      <div class="tc-rating">★★★★☆</div>
+      <div class="tc-quote">"L'acompte à 20€ c'est parfait — on engage <span class="highlight">sans se ruiner</span> si ça tombe à l'eau."</div>
+      <div class="tc-author">Thomas L.</div>
+      <div class="tc-team">Nord United · Paris 12e</div>
+      <div class="tc-bg-num">4</div>
+    </div>
+    <div class="testimony-card" style="position:relative;overflow:hidden;">
+      <div class="tc-rating">★★★★★</div>
+      <div class="tc-quote">"On a monté de niveau en 2 mois. <span class="highlight">Le classement ça motive tout le monde</span> à venir jouer."</div>
+      <div class="tc-author">Julien M.</div>
+      <div class="tc-team">OL Amateurs · Lyon 2e</div>
+      <div class="tc-bg-num">5</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== CTA FINALE ======================== -->
+<section class="cta-section">
+  <div class="cta-left reveal">
+    <div class="cta-eyebrow">Prêt à jouer ?</div>
+    <div class="cta-title">
+      Ton prochain<br>match<br><em>t'attend</em><br><span class="red">ce soir.</span>
+    </div>
+    <p class="cta-sub">Des dizaines d'équipes cherchent un adversaire en ce moment. Rejoins-les ou crée ton propre match en moins de 3 minutes.</p>
+    <div class="cta-actions">
+      <a href="/app" class="btn-hero-primary">Accéder à l'app →</a>
+      <a href="#" class="btn-hero-ghost">En savoir plus</a>
+    </div>
+  </div>
+  <div class="cta-right reveal" style="transition-delay:0.15s;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:18px;">Inclus dans chaque match</div>
+    <div class="cta-checklist">
+      <div class="cta-check-item">
+        <div class="cci-mark">→</div>
+        <div class="cci-text"><strong>Réservation sécurisée</strong> — Ton créneau est bloqué dès le paiement de l'acompte. Personne ne peut te le voler.</div>
+      </div>
+      <div class="cta-check-item">
+        <div class="cci-mark">→</div>
+        <div class="cci-text"><strong>Feuille de match numérique</strong> — Gère tes titulaires et remplaçants. Tout le monde est enregistré.</div>
+      </div>
+      <div class="cta-check-item">
+        <div class="cci-mark">→</div>
+        <div class="cci-text"><strong>Système de points</strong> — Chaque présence rapporte des points. Montez de niveau, construisez votre réputation.</div>
+      </div>
+      <div class="cta-check-item">
+        <div class="cci-mark">→</div>
+        <div class="cci-text"><strong>Créneaux en temps réel</strong> — Tu vois uniquement les créneaux vraiment disponibles du Five.</div>
+      </div>
+      <div class="cta-check-item" style="border-bottom:none;">
+        <div class="cci-mark">→</div>
+        <div class="cci-text"><strong>Paiement flexible</strong> — Acompte 20€ + sur place, ou tout en ligne. Ton choix.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== FOOTER ======================== -->
+<footer>
+  <div class="footer-logo">Match<em>day</em></div>
+  <div class="footer-links">
+    <a href="#">Comment ça marche</a>
+    <a href="#">Gérants</a>
+    <a href="#">CGU</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-copy">© 2025 Matchday</div>
+</footer>
+
+<!-- ======================== AUTH MODAL ======================== -->
+<div class="auth-overlay" id="authOverlay" onclick="handleOverlayClick(event)">
+  <div class="auth-panel" id="authPanel">
+    <button class="auth-close" onclick="closeAuth()">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabConnexion" onclick="switchTab('connexion')">Connexion</button>
+      <button class="auth-tab" id="tabInscription" onclick="switchTab('inscription')">Inscription</button>
+    </div>
+    <div class="auth-body">
+
+      <!-- ===== CONNEXION ===== -->
+      <div class="auth-section active" id="sectionConnexion">
+        <div class="auth-error" id="loginError">Email ou mot de passe incorrect.</div>
+        <div class="auth-field">
+          <label class="auth-label">Adresse email</label>
+          <input class="auth-input" type="email" id="loginEmail" placeholder="ton@email.com" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Mot de passe</label>
+          <input class="auth-input" type="password" id="loginPassword" placeholder="••••••••" />
+        </div>
+        <button class="auth-submit" onclick="handleLogin()">Se connecter →</button>
+        <p class="auth-hint">Pas encore de compte ? <a onclick="switchTab('inscription')">S'inscrire</a> · <a onclick="switchTab('oubli')">Mot de passe oublié ?</a></p>
+      </div>
+
+      <!-- ===== MOT DE PASSE OUBLIÉ ===== -->
+      <div class="auth-section" id="sectionOubli">
+        <div class="auth-error" id="oubliError"></div>
+        <div class="auth-field">
+          <label class="auth-label">Ton adresse email</label>
+          <input class="auth-input" type="email" id="oubliEmail" placeholder="ton@email.com" />
+        </div>
+        <button class="auth-submit" id="oubliBtn" onclick="handleOubli()">Envoyer le lien →</button>
+        <p class="auth-hint">Tu te souviens ? <a onclick="switchTab('connexion')">Se connecter</a></p>
+      </div>
+
+      <!-- ===== SUCCÈS MOT DE PASSE OUBLIÉ ===== -->
+      <div class="auth-section" id="sectionOubliSuccess">
+        <div class="auth-success">
+          <div class="auth-success-icon">✉️</div>
+          <div class="auth-success-title">Email envoyé !</div>
+          <div class="auth-success-sub">Vérifie ta boîte mail (et les spams).<br>Le lien est valable 1 heure.</div>
+          <button class="auth-submit" style="max-width:200px;margin:20px auto 0;" onclick="switchTab('connexion')">Retour connexion →</button>
+        </div>
+      </div>
+
+      <!-- ===== INSCRIPTION ===== -->
+      <div class="auth-section" id="sectionInscription">
+        <div class="auth-error" id="registerError"></div>
+        <div class="auth-field">
+          <label class="auth-label">Adresse email</label>
+          <input class="auth-input" type="email" id="regEmail" placeholder="ton@email.com" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Mot de passe</label>
+          <input class="auth-input" type="password" id="regPassword" placeholder="Minimum 8 caractères" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Numéro de téléphone</label>
+          <input class="auth-input" type="tel" id="regPhone" placeholder="+33 6 00 00 00 00" />
+        </div>
+        <button class="auth-submit" onclick="handleRegister()">Créer mon compte →</button>
+        <p class="auth-hint">Déjà un compte ? <a onclick="switchTab('connexion')">Se connecter</a></p>
+        <p class="auth-hint" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">Vous gérez un Five ? <a href="/gerant" style="color:rgba(255,255,255,0.4);">Espace gérant →</a></p>
+      </div>
+
+      <!-- ===== SUCCÈS INSCRIPTION ===== -->
+      <div class="auth-section" id="sectionSuccess">
+        <div class="auth-success">
+          <div class="auth-success-icon">✉️</div>
+          <div class="auth-success-title">Email envoyé !</div>
+          <div class="auth-success-sub" id="successMessage">Un email de confirmation a été envoyé à <strong id="successEmail"></strong>.<br>Vérifie ta boîte mail pour activer ton compte.</div>
+        </div>
+      </div>
+
+      <!-- ===== SUCCÈS CONNEXION ===== -->
+      <div class="auth-section" id="sectionLoggedIn">
+        <div class="auth-success">
+          <div class="auth-success-icon">👋</div>
+          <div class="auth-success-title">Bienvenue !</div>
+          <div class="auth-success-sub">Tu es connecté en tant que <strong id="loggedInEmail"></strong><br><span id="loggedInRole"></span></div>
+          <button class="auth-submit" style="max-width:200px;margin:20px auto 0;" onclick="handleLogout()">Se déconnecter</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script>
+// scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.12 });
+reveals.forEach(r => obs.observe(r));
+
+// filter tabs
+document.querySelectorAll('.filter-tab').forEach(t => {
+  t.addEventListener('click', function() {
+    this.closest('.filters-bar').querySelectorAll('.filter-tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ======================== AUTH LOGIC ========================
+
+let currentLoginRole = 'joueur';
+let currentRegRole = 'joueur';
+
+function openAuth() {
+  const session = getSession();
+  if (session) {
+    showSection('LoggedIn');
+    document.getElementById('loggedInEmail').textContent = session.email;
+    document.getElementById('loggedInRole').textContent = session.role === 'gerant' ? '🏟️ Gérant de Five' : '⚽ Joueur';
+  }
+  document.getElementById('authOverlay').classList.add('open');
+}
+
+function closeAuth() {
+  document.getElementById('authOverlay').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('authOverlay')) closeAuth();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('tab' + capitalize(tab));
+  if (tabEl) tabEl.classList.add('active');
+  showSection(capitalize(tab));
+  clearErrors();
+}
+
+async function handleOubli() {
+  const email = document.getElementById('oubliEmail').value.trim();
+  if (!email) { showError('oubliError', 'Entre ton adresse email.'); return; }
+  const btn = document.getElementById('oubliBtn');
+  btn.textContent = 'Envoi en cours...'; btn.disabled = true;
+  try {
+    const res = await fetch('https://matchday-backend-eight.vercel.app/api/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (data.success) { showSection('OubliSuccess'); }
+    else { showError('oubliError', data.error || 'Erreur · Réessaie.'); }
+  } catch(e) { showError('oubliError', 'Erreur connexion.'); }
+  btn.textContent = 'Envoyer le lien →'; btn.disabled = false;
+}
+
+function showSection(name) {
+  document.querySelectorAll('.auth-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section' + name).classList.add('active');
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+
+function clearErrors() {
+  document.querySelectorAll('.auth-error').forEach(e => e.classList.remove('show'));
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+const API_URL = 'https://matchday-backend-eight.vercel.app/api/auth';
+
+// ---- SESSION ----
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('matchday_session')); } catch { return null; }
+}
+function saveSession(user) {
+  localStorage.setItem('matchday_session', JSON.stringify(user));
+}
+function clearSession() {
+  localStorage.removeItem('matchday_session');
+}
+
+// ---- REGISTER ----
+async function handleRegister() {
+  clearErrors();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const phone = document.getElementById('regPhone').value.trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showError('registerError', 'Adresse email invalide.'); return;
+  }
+  if (password.length < 8) {
+    showError('registerError', 'Le mot de passe doit contenir au moins 8 caractères.'); return;
+  }
+  if (!phone) {
+    showError('registerError', 'Numéro de téléphone requis.'); return;
+  }
+
+  const btn = document.querySelector('#sectionInscription .auth-submit');
+  btn.textContent = 'Création en cours...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'register', email, password, phone, role: 'joueur' })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('registerError', data.error || 'Une erreur est survenue.');
+    } else {
+      document.getElementById('successEmail').textContent = email;
+      showSection('Success');
+      updateNavButton();
+    }
+  } catch (e) {
+    showError('registerError', 'Impossible de contacter le serveur.');
+  }
+
+  btn.textContent = 'Créer mon compte →';
+  btn.disabled = false;
+}
+
+// ---- LOGIN ----
+async function handleLogin() {
+  clearErrors();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  const btn = document.querySelector('#sectionConnexion .auth-submit');
+  btn.textContent = 'Connexion en cours...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password, role: 'joueur' })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('loginError', data.error || 'Une erreur est survenue.');
+    } else {
+      saveSession(data.user);
+      document.getElementById('loggedInEmail').textContent = data.user.email;
+      document.getElementById('loggedInRole').textContent = '⚽ Joueur';
+      showSection('LoggedIn');
+      updateNavButton();
+    }
+  } catch (e) {
+    showError('loginError', 'Impossible de contacter le serveur.');
+  }
+
+  btn.textContent = 'Se connecter →';
+  btn.disabled = false;
+}
+
+// ---- LOGOUT ----
+function handleLogout() {
+  clearSession();
+  closeAuth();
+  updateNavButton();
+}
+
+// ---- Nav button update ----
+function updateNavButton() {
+  const session = getSession();
+  const btn = document.querySelector('.nav-auth-btn');
+  if (session) {
+    btn.textContent = session.email.split('@')[0];
+    btn.style.color = 'rgba(200,245,32,0.8)';
+  } else {
+    btn.textContent = 'Connexion / Inscription';
+    btn.style.color = '';
+  }
+}
+
+
+// Init
+updateNavButton();
+</script>
+</body>
+</html>
