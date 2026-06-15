@@ -637,10 +637,52 @@ footer {
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
+/* ======================== NAV HAMBURGER ======================== */
+.nav-hamburger {
+  display: none;
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.7); font-size: 22px;
+  padding: 4px 8px; line-height: 1; margin-left: 8px;
+}
+.nav-mobile-drawer {
+  display: none;
+  position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
+  background: var(--ink);
+  border-bottom: 2px solid rgba(200,245,32,0.2);
+  flex-direction: column;
+}
+.nav-mobile-drawer.open { display: flex; }
+.nav-mobile-drawer a {
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.5);
+  text-decoration: none; padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: block; font-family: 'Barlow Condensed', sans-serif;
+}
+.nav-mobile-drawer a:hover { color: #fff; background: rgba(255,255,255,0.04); }
+.nav-mobile-drawer .drawer-auth-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.5);
+  text-decoration: none; padding: 16px 24px;
+  border: none; border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: none; display: block; width: 100%; text-align: left; cursor: pointer;
+}
+.nav-mobile-drawer .drawer-cta {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink) !important;
+  background: var(--lime) !important;
+  margin: 16px 24px; padding: 14px 24px !important;
+  height: auto !important; text-align: center; display: block !important;
+  border: none;
+}
+
 /* ======================== RESPONSIVE ======================== */
 @media (max-width: 900px) {
   nav { padding: 0 20px; }
   .nav-links { display: none; }
+  .nav-hamburger { display: block; }
   .hero { grid-template-columns: 1fr; }
   .hero-right { display: none; }
   .hero-left { padding: 60px 28px; }
@@ -670,7 +712,16 @@ footer {
     <button class="nav-auth-btn" onclick="openAuth()">Connexion / Inscription</button>
     <a href="/app" class="nav-cta">Accéder à l'app →</a>
   </div>
+  <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
 </nav>
+<div class="nav-mobile-drawer" id="navMobileDrawer">
+  <a href="#comment" onclick="closeMobileNav()">Comment ça marche</a>
+  <a href="#fonctions" onclick="closeMobileNav()">Fonctionnalités</a>
+  <a href="#tarifs" onclick="closeMobileNav()">Tarifs</a>
+  <a href="#gerants" onclick="closeMobileNav()">Gérants</a>
+  <button class="drawer-auth-btn" onclick="closeMobileNav();openAuth()">Connexion / Inscription</button>
+  <a href="/app" class="drawer-cta" onclick="closeMobileNav()">Accéder à l'app →</a>
+</div>
 
 <!-- ======================== HERO ======================== -->
 <section class="hero">
@@ -708,7 +759,7 @@ footer {
     <div class="hr-label"><span class="live-dot"></span>Matchs disponibles maintenant</div>
     <div class="match-preview-card">
       <div class="mpc-head">
-        <div><div class="mpc-venue">Five Arena Pigalle</div><div class="mpc-loc">Paris 9e · Sam 19 avr. · 19h</div></div>
+        <div><div class="mpc-venue">Five Arena Pigalle</div><div class="mpc-loc" id="heroDate1">Paris 9e · ...</div></div>
         <span class="mpc-tag mpc-tag-open">En attente</span>
       </div>
       <div class="mpc-body">
@@ -719,7 +770,7 @@ footer {
     </div>
     <div class="match-preview-card">
       <div class="mpc-head">
-        <div><div class="mpc-venue">UrbanFive Oberkampf</div><div class="mpc-loc">Paris 11e · Mer 23 avr. · 20h</div></div>
+        <div><div class="mpc-venue">UrbanFive Oberkampf</div><div class="mpc-loc" id="heroDate2">Paris 11e · ...</div></div>
         <span class="mpc-tag mpc-tag-conf">Confirmé ✓</span>
       </div>
       <div class="mpc-body">
@@ -730,7 +781,7 @@ footer {
     </div>
     <div class="match-preview-card">
       <div class="mpc-head">
-        <div><div class="mpc-venue">Five Nation Bercy</div><div class="mpc-loc">Paris 12e · Ven 25 avr. · 18h30</div></div>
+        <div><div class="mpc-venue">Five Nation Bercy</div><div class="mpc-loc" id="heroDate3">Paris 12e · ...</div></div>
         <span class="mpc-tag mpc-tag-open">En attente</span>
       </div>
       <div class="mpc-body">
@@ -741,7 +792,7 @@ footer {
     </div>
     <div class="match-preview-card">
       <div class="mpc-head">
-        <div><div class="mpc-venue">Le Five République</div><div class="mpc-loc">Paris 10e · Dim 27 avr. · 10h</div></div>
+        <div><div class="mpc-venue">Le Five République</div><div class="mpc-loc" id="heroDate4">Paris 10e · ...</div></div>
         <span class="mpc-tag mpc-tag-open">En attente</span>
       </div>
       <div class="mpc-body">
@@ -972,7 +1023,7 @@ footer {
         <li>Dashboard revenus en temps réel</li>
         <li>Avis joueurs après chaque match</li>
       </ul>
-      <a href="#" class="pc-cta">Rejoindre en tant que Five</a>
+      <a href="/gerant" class="pc-cta">Rejoindre en tant que Five</a>
     </div>
   </div>
 </section>
@@ -1032,7 +1083,7 @@ footer {
     <p class="cta-sub">Des dizaines d'équipes cherchent un adversaire en ce moment. Rejoins-les ou crée ton propre match en moins de 3 minutes.</p>
     <div class="cta-actions">
       <a href="/app" class="btn-hero-primary">Accéder à l'app →</a>
-      <a href="#" class="btn-hero-ghost">En savoir plus</a>
+      <a href="#comment" class="btn-hero-ghost">En savoir plus</a>
     </div>
   </div>
   <div class="cta-right reveal" style="transition-delay:0.15s;">
@@ -1066,8 +1117,8 @@ footer {
 <footer>
   <div class="footer-logo">Match<em>day</em></div>
   <div class="footer-links">
-    <a href="#">Comment ça marche</a>
-    <a href="#">Gérants</a>
+    <a href="#comment">Comment ça marche</a>
+    <a href="#gerants">Gérants</a>
     <a href="#">CGU</a>
     <a href="#">Contact</a>
   </div>
@@ -1362,6 +1413,45 @@ function updateNavButton() {
 
 // Init
 updateNavButton();
+
+// ======================== MOBILE NAV ========================
+function toggleMobileNav() {
+  document.getElementById('navMobileDrawer').classList.toggle('open');
+}
+function closeMobileNav() {
+  document.getElementById('navMobileDrawer').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  const drawer = document.getElementById('navMobileDrawer');
+  const hamburger = document.getElementById('navHamburger');
+  if (drawer && drawer.classList.contains('open') && !drawer.contains(e.target) && !hamburger.contains(e.target)) {
+    drawer.classList.remove('open');
+  }
+});
+
+// ======================== DYNAMIC HERO DATES ========================
+(function() {
+  const jours = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const mois = ['jan.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  function fmtDate(d) {
+    return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()];
+  }
+  function addDays(n) {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+  const slots = [
+    { id: 'heroDate1', prefix: 'Paris 9e', offset: 2,  time: '19h' },
+    { id: 'heroDate2', prefix: 'Paris 11e', offset: 5, time: '20h' },
+    { id: 'heroDate3', prefix: 'Paris 12e', offset: 7, time: '18h30' },
+    { id: 'heroDate4', prefix: 'Paris 10e', offset: 9, time: '10h' },
+  ];
+  slots.forEach(function(s) {
+    const el = document.getElementById(s.id);
+    if (el) el.textContent = s.prefix + ' · ' + fmtDate(addDays(s.offset)) + ' · ' + s.time;
+  });
+})();
 </script>
 </body>
 </html>
