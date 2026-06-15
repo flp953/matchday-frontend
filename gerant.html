@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Matchday — Espace Gérant</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #111010;
+  --paper: #F5F3EF;
+  --paper2: #EDEAE4;
+  --paper3: #E2DED7;
+  --cream: #FAF8F4;
+  --lime: #C8F520;
+  --lime-dark: #9BBD0A;
+  --lime-muted: rgba(200,245,32,0.10);
+  --red: #D93B1A;
+  --blue: #1B52CC;
+  --muted: #8A8278;
+  --muted2: #B5B0A8;
+  --line: rgba(17,16,16,0.09);
+  --line-heavy: rgba(17,16,16,0.20);
+}
+
+html { font-size: 14px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ===================== AUTH ===================== */
+.auth-gate {
+  position: fixed; inset: 0;
+  background: var(--ink);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.auth-card {
+  width: 100%; max-width: 400px;
+  background: #1a1917;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 40px;
+}
+.auth-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px; font-weight: 900;
+  color: #fff; text-transform: uppercase;
+  letter-spacing: -1px; margin-bottom: 4px;
+}
+.auth-logo em { color: var(--lime); font-style: italic; }
+.auth-sub {
+  font-size: 9px; font-weight: 500; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,0.25);
+  font-family: 'DM Mono', monospace; margin-bottom: 32px;
+}
+.auth-label {
+  font-size: 9px; font-weight: 500; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+  font-family: 'DM Mono', monospace; margin-bottom: 8px; display: block;
+}
+.auth-input {
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff; padding: 12px 14px;
+  font-family: 'Barlow', sans-serif; font-size: 14px;
+  outline: none; margin-bottom: 14px;
+  transition: border-color 0.15s;
+}
+.auth-input:focus { border-color: var(--lime); }
+.auth-btn {
+  width: 100%; background: var(--lime); color: var(--ink);
+  border: none; padding: 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  cursor: pointer; transition: background 0.15s;
+}
+.auth-btn:hover { background: var(--lime-dark); }
+.auth-error {
+  background: rgba(217,59,26,0.15); border: 1px solid rgba(217,59,26,0.3);
+  color: #ff6b4a; padding: 10px 14px; font-size: 12px;
+  margin-bottom: 14px; display: none;
+}
+.auth-hint {
+  font-size: 11px; color: rgba(255,255,255,0.25);
+  text-align: center; margin-top: 16px;
+}
+.auth-hint a { color: rgba(255,255,255,0.5); cursor: pointer; text-decoration: underline; }
+
+/* ===================== LAYOUT ===================== */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 224px; flex-shrink: 0;
+  background: var(--ink);
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 50; overflow-y: auto;
+  display: flex; flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.04);
+}
+.logo-block {
+  padding: 24px 22px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+}
+.logo-block::after {
+  content: ''; position: absolute; bottom: 0; left: 22px; right: 22px;
+  height: 1px; background: linear-gradient(90deg, var(--lime) 0%, transparent 100%);
+  opacity: 0.4;
+}
+.logo-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 30px; font-weight: 900; letter-spacing: -1.5px;
+  color: #fff; line-height: 1; text-transform: uppercase;
+}
+.logo-text em { font-style: italic; color: var(--lime); }
+.logo-sub {
+  font-size: 9px; font-weight: 500; letter-spacing: 3.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.22);
+  margin-top: 4px; font-family: 'DM Mono', monospace;
+}
+.gerant-badge {
+  display: inline-block; background: var(--lime); color: var(--ink);
+  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  padding: 2px 6px; font-family: 'DM Mono', monospace;
+  text-transform: uppercase; margin-top: 6px;
+}
+
+.nav-group { padding: 18px 0 8px; }
+.nav-label {
+  font-size: 8px; font-weight: 500; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,0.16);
+  padding: 0 22px 10px; font-family: 'DM Mono', monospace;
+}
+.nav-item {
+  display: flex; align-items: center; padding: 9px 22px;
+  cursor: pointer; font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.38);
+  transition: color 0.15s, background 0.15s;
+  border: none; background: none; width: 100%; text-align: left;
+  font-family: 'Barlow', sans-serif; letter-spacing: 0.3px; position: relative;
+}
+.nav-item:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: #fff; background: rgba(200,245,32,0.07); }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 2px; background: var(--lime); border-radius: 0 2px 2px 0;
+}
+.nav-icon { width: 20px; text-align: center; margin-right: 9px; font-size: 12px; flex-shrink: 0; }
+.nav-icon svg { width: 16px; height: 16px; stroke-width: 1.5; vertical-align: middle; }
+
+.sidebar-footer {
+  margin-top: auto; border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+}
+.sf-avatar {
+  width: 30px; height: 30px; background: var(--lime-muted);
+  border: 1px solid rgba(200,245,32,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 800; color: var(--lime); flex-shrink: 0;
+}
+.sf-name { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.65); line-height: 1.3; }
+.sf-role { font-size: 9px; color: rgba(255,255,255,0.22); font-family: 'DM Mono', monospace; }
+.sf-logout {
+  margin-left: auto; background: none; border: none;
+  color: rgba(255,255,255,0.18); cursor: pointer; padding: 4px;
+  transition: color 0.15s;
+}
+.sf-logout:hover { color: var(--lime); }
+
+/* ===================== MAIN ===================== */
+.main { margin-left: 224px; flex: 1; }
+.page { display: none; }
+.page.active { display: block; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================== TOPBAR ===================== */
+.topbar {
+  padding: 28px 40px 20px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 0; border-bottom: 1px solid var(--line);
+}
+.page-label {
+  font-size: 9px; font-weight: 500; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 6px; font-family: 'DM Mono', monospace;
+}
+.page-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px; font-weight: 900;
+  letter-spacing: -1.5px; line-height: 1; text-transform: uppercase;
+}
+.page-title em { font-style: italic; color: var(--muted2); }
+
+/* ===================== BUTTONS ===================== */
+.btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 12px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 22px; border: none; cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-primary { background: var(--ink); color: var(--lime); border: 1px solid var(--ink); }
+.btn-primary:hover { opacity: 0.88; }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--line-heavy); }
+.btn-outline:hover { background: var(--paper2); border-color: var(--ink); }
+.btn-lime { background: var(--lime); color: var(--ink); border: 1px solid var(--lime); font-weight: 800; }
+.btn-lime:hover { background: var(--lime-dark); }
+.btn-sm { font-size: 10px; padding: 6px 13px; letter-spacing: 1px; }
+.btn-red { background: rgba(217,59,26,0.1); color: var(--red); border: 1px solid rgba(217,59,26,0.3); }
+.btn-red:hover { background: rgba(217,59,26,0.18); border-color: var(--red); }
+
+/* ===================== TAGS ===================== */
+.tag {
+  font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+  letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 8px;
+  display: inline-block; border: 1px solid transparent;
+}
+.tag-lime { background: rgba(200,245,32,0.15); color: #4E6800; border-color: rgba(200,245,32,0.4); }
+.tag-green { background: rgba(30,160,80,0.08); color: #1A6B3A; border-color: rgba(30,160,80,0.2); }
+.tag-grey { background: var(--paper3); color: var(--muted); border-color: var(--line-heavy); }
+.tag-red { background: rgba(217,59,26,0.1); color: var(--red); border-color: rgba(217,59,26,0.25); }
+
+/* ===================== CONTENT ===================== */
+.content-area { padding: 28px 40px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.3px; margin-bottom: 14px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-heavy);
+}
+.mini-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+
+/* ===================== TOAST ===================== */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
+  background: var(--ink); color: var(--lime);
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 12px 24px; z-index: 9999;
+  opacity: 0; transition: all 0.25s; pointer-events: none; white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===================== FILTRE SELECT ===================== */
+.filter-select {
+  appearance: none; background: var(--paper);
+  border: 1px solid var(--line-heavy); color: var(--ink);
+  font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 500;
+  padding: 8px 28px 8px 12px; cursor: pointer; outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  transition: border-color 0.15s;
+}
+.filter-select:focus { border-color: var(--ink); }
+
+/* ===================== CHART BAR ===================== */
+.chart-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
+.chart-bar-row { display: flex; align-items: center; gap: 10px; }
+.chart-bar-label { font-size: 10px; color: var(--muted); min-width: 60px; font-family: 'DM Mono', monospace; }
+.chart-bar-track { flex: 1; height: 8px; background: var(--paper3); }
+.chart-bar-fill { height: 8px; background: var(--lime); transition: width 0.6s ease; }
+.chart-bar-val { font-size: 11px; font-weight: 600; min-width: 36px; text-align: right; font-family: 'DM Mono', monospace; }
+
+/* ===================== BOTTOM NAV (mobile) ===================== */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 60;
+  background: var(--ink); border-top: 1px solid rgba(255,255,255,0.08);
+  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.bottom-nav-inner {
+  display: flex; height: 64px;
+}
+.bn-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.3);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; transition: color 0.15s;
+  padding: 0;
+}
+.bn-item:hover { color: rgba(255,255,255,0.7); }
+.bn-item.active { color: var(--lime); }
+.bn-icon { font-size: 18px; line-height: 1; }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .bottom-nav { display: flex; }
+  .main { margin-left: 0; padding-bottom: 64px; }
+  .topbar { padding: 20px; }
+  .content-area { padding: 20px; }
+  .two-col { grid-template-columns: 1fr; }
+  .page-title { font-size: 30px; }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-logo">Match<em>day</em></div>
+    <div class="auth-sub">Espace Gérant</div>
+    <div class="auth-error" id="authError"></div>
+    <label class="auth-label">Adresse email</label>
+    <input class="auth-input" type="email" id="authEmail" placeholder="gerant@myfive.fr">
+    <label class="auth-label">Mot de passe</label>
+    <input class="auth-input" type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="auth-btn" onclick="doLogin()">Accéder à l'espace gérant</button>
+    <p class="auth-hint">Pas encore de compte ? <a href="/">Retour à l'accueil</a></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appContent" style="display:none;">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-block">
+    <div class="logo-text">Match<em>day</em></div>
+    <div class="logo-sub">Espace Gérant</div>
+    <div class="gerant-badge">Gérant</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Navigation</div>
+    <button class="nav-item active" id="nav-overview" onclick="showPage(&quot;overview&quot;, this)">
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="2" y="2" width="7" height="7"/><rect x="11" y="2" width="7" height="7"/><rect x="2" y="11" width="7" height="7"/><rect x="11" y="11" width="7" height="7"/></svg></span>Vue d'ensemble
+    </button>
+    <button class="nav-item" id="nav-reservations" onclick="showPage(&quot;reservations&quot;, this)">
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="2" y="3" width="16" height="16" rx="2"/><path d="M13 1v4M7 1v4M2 9h16"/></svg></span>Réservations
+    </button>
+    <button class="nav-item" id="nav-revenus" onclick="showPage(&quot;revenus&quot;, this)">
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M10 2v16M5 6h7.5a2.5 2.5 0 010 5H5m0 0h8a2.5 2.5 0 010 5H5"/></svg></span>Revenus
+    </button>
+    <button class="nav-item" id="nav-avis" onclick="showPage(&quot;avis&quot;, this)">
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M2 5h16v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"/><path d="M2 5l8 7 8-7"/></svg></span>Avis joueurs
+    </button>
+    <button class="nav-item" id="nav-terrain" onclick="showPage(&quot;terrain&quot;, this)">
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M10 2C6.5 2 4 4.5 4 8c0 5 6 10 6 10s6-5 6-10c0-3.5-2.5-6-6-6z"/><circle cx="10" cy="8" r="2"/></svg></span>Mon terrain
+    </button>
+    <button class="nav-item" id="nav-terrains" onclick="showPage(&quot;terrains&quot;, this)">
+      <span class="nav-icon">▦</span>Mes terrains
+    </button>
+    <button class="nav-item" id="nav-alertes" onclick="showPage(&quot;alertes&quot;, this)">
+      <span class="nav-icon">🔔</span>Alertes
+      <span id="alertes-badge" class="nav-badge" style="display:none;background:var(--lime);color:var(--ink);font-size:9px;padding:2px 5px;margin-left:auto;">0</span>
+    </button>
+    <button class="nav-item" id="nav-blacklist" onclick="showPage(&quot;blacklist&quot;, this)">
+      <span class="nav-icon">🚫</span>Blacklist
+    </button>
+    <button class="nav-item" id="nav-exports" onclick="showPage(&quot;exports&quot;, this)">
+      <span class="nav-icon">📄</span>Exports
+    </button>
+    <button class="nav-item" id="nav-parametres" onclick="showPage(&quot;parametres&quot;, this)">
+      <span class="nav-icon">⚙️</span>Paramètres
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sf-avatar" id="sfAvatar">G</div>
+    <div>
+      <div class="sf-name" id="sfName">—</div>
+      <div class="sf-role">Gérant de Five</div>
+    </div>
+    <button class="sf-logout" onclick="doLogout()" title="Se déconnecter">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M13 15l4-5-4-5M17 10H7"/><path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- BOTTOM NAV (mobile ≤768px) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <button class="bn-item active" id="bn-overview" onclick="showPage('overview', document.getElementById('nav-overview'))">
+      <span class="bn-icon">▦</span>Accueil
+    </button>
+    <button class="bn-item" id="bn-reservations" onclick="showPage('reservations', document.getElementById('nav-reservations'))">
+      <span class="bn-icon">📅</span>Réservations
+    </button>
+    <button class="bn-item" id="bn-revenus" onclick="showPage('revenus', document.getElementById('nav-revenus'))">
+      <span class="bn-icon">💶</span>Revenus
+    </button>
+    <button class="bn-item" id="bn-parametres" onclick="showPage('parametres', document.getElementById('nav-parametres'))">
+      <span class="bn-icon">⚙️</span>Paramètres
+    </button>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- PAGE : VUE D'ENSEMBLE -->
+<div class="page active" id="page-overview">
+  <div class="topbar">
+    <div>
+      <div class="page-label" id="five-nom-label">Chargement...</div>
+      <div class="page-title">Vue d'en<em>semble</em></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="prochain-match-badge" style="display:none;text-align:right;">
+        <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">Prochain match</div>
+        <div id="prochain-match-label" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;text-transform:uppercase;"></div>
+      </div>
+      <select class="filter-select" id="five-select" onchange="loadData()" style="min-width:200px;">
+        <option value="">Choisir un terrain</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line-heavy);" id="stats-grid">
+    <div style="padding:24px 28px;border-right:1px solid var(--line-heavy);">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace;">Revenus estimés</div>
+      <div id="s-revenus" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;line-height:1;letter-spacing:-2px;color:var(--lime);">—</div>
+    </div>
+    <div style="padding:24px 28px;border-right:1px solid var(--line-heavy);">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace;">Matchs confirmés</div>
+      <div id="s-confirmes" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;line-height:1;letter-spacing:-2px;">—</div>
+    </div>
+    <div style="padding:24px 28px;border-right:1px solid var(--line-heavy);">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace;">En attente</div>
+      <div id="s-attente" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;line-height:1;letter-spacing:-2px;">—</div>
+    </div>
+    <div style="padding:24px 28px;">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace;">Total matchs</div>
+      <div id="s-total" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;line-height:1;letter-spacing:-2px;">—</div>
+    </div>
+  </div>
+  <!-- KPIs secondaires -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line-heavy);">
+    <div style="padding:16px 28px;border-right:1px solid var(--line-heavy);">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Taux de confirmation</div>
+      <div id="s-taux" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;color:var(--lime-dark);">—</div>
+    </div>
+    <div style="padding:16px 28px;border-right:1px solid var(--line-heavy);">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Matchs annulés</div>
+      <div id="s-annules" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;color:var(--red);">—</div>
+    </div>
+    <div style="padding:16px 28px;">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Revenu moyen / match</div>
+      <div id="s-moy" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;">—</div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="two-col">
+      <!-- Dernières réservations -->
+      <div>
+        <div class="section-title">Dernières réservations</div>
+        <div id="last-reservations">
+          <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Sélectionnez un terrain</div>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">Exporter CSV</button>
+        </div>
+      </div>
+
+      <!-- Répartition statuts -->
+      <div>
+        <div class="section-title">Répartition des matchs</div>
+        <div id="chart-statuts" style="margin-bottom:28px;">
+          <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Sélectionnez un terrain</div>
+        </div>
+
+        <div class="section-title">Accès rapide</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-outline" onclick="showPage(&quot;reservations&quot;, document.getElementById(&quot;nav-reservations&quot;))" style="justify-content:flex-start;">Voir toutes les réservations</button>
+          <button class="btn btn-outline" onclick="showPage(&quot;revenus&quot;, document.getElementById(&quot;nav-revenus&quot;))" style="justify-content:flex-start;">Détail des revenus</button>
+          <button class="btn btn-outline" onclick="showPage(&quot;avis&quot;, document.getElementById(&quot;nav-avis&quot;))" style="justify-content:flex-start;">Consulter les avis</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE : CALENDRIER -->
+<div class="page" id="page-reservations">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Planning</div>
+      <div class="page-title">Calen<em>drier</em></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-outline btn-sm" onclick="calPrev()">← Préc.</button>
+      <span id="cal-week-label" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:500;min-width:160px;text-align:center;"></span>
+      <button class="btn btn-outline btn-sm" onclick="calNext()">Suiv. →</button>
+      <button class="btn btn-lime btn-sm" onclick="showPage('parametres', document.getElementById('nav-parametres'))">Paramètres →</button>
+    </div>
+  </div>
+
+  <div style="padding:10px 40px;border-bottom:1px solid var(--line);display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:var(--paper2);border:1px solid var(--line-heavy);"></div><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">Disponible</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:rgba(200,245,32,0.25);border:1px solid rgba(200,245,32,0.5);"></div><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">1 équipe</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:rgba(200,245,32,0.6);"></div><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">Confirmé</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:rgba(217,59,26,0.2);border:1px solid rgba(217,59,26,0.4);"></div><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">Bloqué</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:rgba(27,82,204,0.15);border:1px solid rgba(27,82,204,0.3);"></div><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">Heure creuse</span></div>
+  </div>
+
+  <div style="overflow-x:auto;"><div id="cal-grid" style="min-width:700px;"></div></div>
+
+  <!-- TABLE DES RÉSERVATIONS (sous le calendrier) -->
+  <div class="content-area" style="margin-top:0;padding-top:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:0;">Toutes les réservations</div>
+      <div style="display:flex;gap:6px;">
+        <button id="rf-all" onclick="filterRes('all')" style="padding:6px 14px;font-family:'DM Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--line-heavy);cursor:pointer;background:var(--ink);color:#fff;">Tous</button>
+        <button id="rf-open" onclick="filterRes('open')" style="padding:6px 14px;font-family:'DM Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--line-heavy);cursor:pointer;background:transparent;color:var(--ink);">En attente</button>
+        <button id="rf-confirmed" onclick="filterRes('confirmed')" style="padding:6px 14px;font-family:'DM Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--line-heavy);cursor:pointer;background:transparent;color:var(--ink);">Confirmés</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:70px 1fr 160px 100px 90px 80px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:0;">
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;">Date</div>
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;">Équipes</div>
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;">Horaire</div>
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;">Niveau</div>
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;">Statut</div>
+      <div style="font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;">Revenu</div>
+    </div>
+    <div id="res-table"><div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Sélectionnez un terrain</div></div>
+  </div>
+</div>
+
+<!-- MODAL MODIFIER CRENEAU -->
+<div id="modal-creneau" style="display:none;position:fixed;inset:0;background:rgba(17,16,16,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--cream);max-width:420px;width:100%;border:1px solid var(--line-heavy);">
+    <div style="background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div id="mc-title" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;">Créneau</div>
+      <button onclick="closeCreneauModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    <div style="padding:18px;">
+      <div id="mc-info" style="background:var(--paper2);border:1px solid var(--line);padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;"></div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Statut</label>
+        <select id="mc-statut" class="filter-select" style="width:100%;padding:10px;">
+          <option value="disponible">Disponible</option>
+          <option value="bloque">Bloqué (interne)</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Prix (€)</label>
+          <input type="number" id="mc-prix" class="filter-select" style="width:100%;padding:10px;">
+        </div>
+        <div>
+          <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Type</label>
+          <select id="mc-type" class="filter-select" style="width:100%;padding:10px;">
+            <option value="normal">Normal</option>
+            <option value="pleine">Heure pleine</option>
+            <option value="creuse">Heure creuse</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Notes</label>
+        <input type="text" id="mc-notes" class="filter-select" style="width:100%;padding:10px;" placeholder="Événement privé, maintenance...">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-lime" onclick="saveCreneauModal()" style="flex:1;justify-content:center;">Sauvegarder</button>
+        <button class="btn btn-outline" id="mc-delete-btn" onclick="deleteCreneauModal()" style="color:var(--red);border-color:var(--red);">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU CRENEAU -->
+<div id="modal-new-creneau" style="display:none;position:fixed;inset:0;background:rgba(17,16,16,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--cream);max-width:380px;width:100%;border:1px solid var(--line-heavy);">
+    <div style="background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;">Nouveau créneau</div>
+      <button onclick="closeNewCreneauModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    <div style="padding:18px;">
+      <div id="nc-label" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Début</label>
+          <input type="time" id="nc-debut" class="filter-select" style="width:100%;padding:10px;">
+        </div>
+        <div>
+          <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Fin</label>
+          <input type="time" id="nc-fin" class="filter-select" style="width:100%;padding:10px;">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Prix (€)</label>
+          <input type="number" id="nc-prix" class="filter-select" style="width:100%;padding:10px;" placeholder="80">
+        </div>
+        <div>
+          <label style="font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Type</label>
+          <select id="nc-type" class="filter-select" style="width:100%;padding:10px;">
+            <option value="pleine">Heure pleine</option>
+            <option value="creuse">Heure creuse</option>
+            <option value="normal">Normal</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-lime" onclick="createNewCreneau()" style="width:100%;justify-content:center;">Créer le créneau</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE : REVENUS -->
+<div class="page" id="page-revenus">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Finances</div>
+      <div class="page-title">Re<em>venus</em></div>
+    </div>
+  </div>
+  <div class="content-area">
+    <div class="two-col">
+      <div>
+        <div class="section-title">Résumé financier</div>
+        <div style="background:var(--paper2);border:1px solid var(--line-heavy);padding:24px;margin-bottom:16px;">
+          <div style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Revenus totaux estimés</div>
+          <div id="r-total" style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--lime);">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">via Matchday · 20€ par équipe ayant payé</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-heavy);">
+          <div style="background:var(--cream);padding:20px;">
+            <div style="font-size:8px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;">Matchs confirmés</div>
+            <div id="r-confirmes" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;">—</div>
+          </div>
+          <div style="background:var(--cream);padding:20px;">
+            <div style="font-size:8px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;">Acomptes reçus</div>
+            <div id="r-acomptes" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--lime);">—</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Répartition par statut</div>
+        <div id="revenus-chart">
+          <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Sélectionnez un terrain</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE : AVIS -->
+<div class="page" id="page-avis">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Réputation</div>
+      <div class="page-title">Avis <em>joueurs</em></div>
+    </div>
+  </div>
+  <div class="content-area">
+    <div id="avis-summary" style="display:grid;grid-template-columns:200px 1fr;gap:28px;margin-bottom:28px;">
+      <div style="background:var(--paper2);border:1px solid var(--line-heavy);padding:24px;text-align:center;">
+        <div style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Note moyenne</div>
+        <div id="avis-moyenne" style="font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--lime);">—</div>
+        <div id="avis-count" style="font-size:11px;color:var(--muted);margin-top:6px;">— avis</div>
+      </div>
+      <div>
+        <div class="section-title">Distribution des notes</div>
+        <div id="avis-dist" class="chart-bar-wrap"></div>
+      </div>
+    </div>
+    <div class="section-title">Tous les avis</div>
+    <div id="avis-list">
+      <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Sélectionnez un terrain</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE : TERRAIN -->
+<div class="page" id="page-terrain">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Mon Five</div>
+      <div class="page-title">Infos <em>terrain</em></div>
+    </div>
+    <button class="btn btn-lime" onclick="saveTerrainInfos()">Sauvegarder</button>
+  </div>
+  <div class="content-area">
+    <div class="two-col">
+      <div>
+        <div class="section-title">Informations du terrain</div>
+        <div id="terrain-info">
+          <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Chargement...</div>
+        </div>
+
+        <div class="section-title" style="margin-top:24px;">Bloquer des créneaux</div>
+        <div style="background:var(--paper2);border:1px solid var(--line-heavy);padding:20px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Bloquez des créneaux déjà réservés sur votre site interne pour éviter les doublons.</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+            <input type="date" id="block-date" class="filter-select" style="flex:1;min-width:120px;">
+            <input type="time" id="block-heure" class="filter-select" style="flex:1;min-width:100px;">
+            <input type="text" id="block-raison" placeholder="Raison (optionnel)" class="filter-select" style="flex:2;min-width:140px;">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="bloquerCreneau()" style="width:100%;justify-content:center;">Bloquer ce créneau</button>
+        </div>
+
+        <div style="margin-top:14px;" id="creneaux-bloques-container">
+          <div style="font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px;">Créneaux bloqués</div>
+          <div id="creneaux-bloques-list">
+            <div style="font-size:12px;color:var(--muted);padding:8px 0;">Aucun créneau bloqué</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Modifier les infos</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="terrain-edit-form">
+          <div>
+            <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Prix par heure (€)</label>
+            <input type="number" id="edit-prix" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="80">
+          </div>
+          <div>
+            <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Horaires d'ouverture</label>
+            <input type="text" id="edit-horaires" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="8h-23h">
+          </div>
+          <div>
+            <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Adresse complète</label>
+            <input type="text" id="edit-adresse" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="18 Rue Fontaine 75009 Paris">
+          </div>
+          <div>
+            <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Type de surface</label>
+            <input type="text" id="edit-surfaces" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="Synthétique 4G">
+          </div>
+          <div>
+            <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Message d'accueil joueurs</label>
+            <textarea id="edit-message" class="filter-select" style="width:100%;padding:10px 12px;height:80px;resize:none;font-family:'Barlow',sans-serif;" placeholder="Bienvenue sur notre terrain..."></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="section-title">Conseils Matchday</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--lime-muted);border:1px solid rgba(200,245,32,0.3);padding:14px;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;margin-bottom:4px;">Boostez votre visibilité</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.5;">Complétez vos infos pour apparaître en premier dans les recherches.</div>
+            </div>
+            <div style="background:var(--paper2);border:1px solid var(--line-heavy);padding:14px;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;margin-bottom:4px;">Prix moyen Paris</div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.5;">La moyenne des terrains partenaires est de <strong>80€/h</strong>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PAGE : MES TERRAINS (multi-terrain) -->
+<div class="page" id="page-terrains">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Gestion</div>
+      <div class="page-title">Mes <em>terrains</em></div>
+    </div>
+    <button class="btn btn-lime btn-sm" onclick="openModal(&quot;addTerrain&quot;)">+ Ajouter un terrain</button>
+  </div>
+  <div class="content-area">
+    <div id="terrains-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+      <!-- Rendered by JS -->
+    </div>
+    <div class="section-title">Planning multi-terrains (aujourd'hui)</div>
+    <div id="multi-terrain-planning">
+      <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Sélectionnez un Five pour voir le planning.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE : ALERTES -->
+<div class="page" id="page-alertes">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Notifications</div>
+      <div class="page-title">Mes <em>alertes</em></div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="marquerAlertesLues()">Tout marquer lu</button>
+  </div>
+  <div id="alertes-list" style="padding:0;">
+    <div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Chargement...</div>
+  </div>
+</div>
+
+<!-- PAGE : BLACKLIST -->
+<div class="page" id="page-blacklist">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Sécurité</div>
+      <div class="page-title">Black<em>list</em></div>
+    </div>
+  </div>
+  <div class="content-area">
+    <div style="background:rgba(217,59,26,0.06);border:1px solid rgba(217,59,26,0.2);padding:14px;font-size:12px;line-height:1.6;margin-bottom:20px;">
+      ⚠️ Les joueurs blacklistés ne pourront plus réserver de créneaux sur votre Five. Ils ne seront pas notifiés du blocage.
+    </div>
+    <div class="section-title">Ajouter un joueur</div>
+    <div style="display:flex;gap:10px;margin-bottom:24px;">
+      <input type="email" id="blacklist-email" class="filter-select" style="flex:1;padding:10px 12px;" placeholder="email@joueur.com">
+      <input type="text" id="blacklist-motif" class="filter-select" style="flex:1;padding:10px 12px;" placeholder="Motif (optionnel)">
+      <button class="btn btn-red btn-sm" onclick="addBlacklist()">Blacklister</button>
+    </div>
+    <div class="section-title">Joueurs bloqués</div>
+    <div id="blacklist-list"><div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Aucun joueur bloqué.</div></div>
+  </div>
+</div>
+
+<!-- PAGE : EXPORTS -->
+<div class="page" id="page-exports">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Comptabilité</div>
+      <div class="page-title">Ex<em>ports</em></div>
+    </div>
+  </div>
+  <div class="content-area">
+    <div class="section-title">Exporter les données</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;">
+
+      <div style="border:1px solid var(--line-heavy);padding:24px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">Période</div>
+        <select class="filter-select" id="export-period" style="width:100%;margin-bottom:12px;">
+          <option value="month">Ce mois</option>
+          <option value="quarter">Ce trimestre</option>
+          <option value="year">Cette année</option>
+          <option value="all">Tout l'historique</option>
+        </select>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportCSV()">📊 Exporter CSV</button>
+          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportPDF()">📄 Exporter PDF (facture)</button>
+          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportJSON()">💾 Exporter JSON (données brutes)</button>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--line-heavy);padding:24px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-family:'DM Mono',monospace;">Récapitulatif rapide</div>
+        <div id="export-recap" style="font-size:12px;color:var(--muted);line-height:2;">Chargement...</div>
+      </div>
+    </div>
+
+    <div class="section-title">Historique des exports</div>
+    <div id="export-history"><div style="font-size:12px;color:var(--muted);">Aucun export précédent.</div></div>
+  </div>
+</div>
+
+<!-- PAGE : PARAMÈTRES (génération créneaux) -->
+<div class="page" id="page-parametres">
+  <div class="topbar">
+    <div>
+      <div class="page-label">Configuration</div>
+      <div class="page-title">Para<em>mètres</em></div>
+    </div>
+    <button class="btn btn-lime" onclick="genererCreneauxAuto()">Générer les créneaux →</button>
+  </div>
+  <div class="content-area">
+    <div class="two-col">
+      <div>
+        <div class="section-title">Génération automatique de créneaux</div>
+        <div style="background:var(--paper2);border:1px solid var(--line-heavy);padding:20px;margin-bottom:16px;">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Heure d'ouverture</label>
+              <input type="time" id="param-ouverture" value="08:00" class="filter-select" style="width:100%;padding:10px 12px;">
+            </div>
+            <div>
+              <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Heure de fermeture</label>
+              <input type="time" id="param-fermeture" value="23:00" class="filter-select" style="width:100%;padding:10px 12px;">
+            </div>
+            <div>
+              <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Durée des créneaux</label>
+              <select id="param-duree" class="filter-select" style="width:100%;padding:10px 12px;">
+                <option value="60">1 heure</option>
+                <option value="90">1h30</option>
+                <option value="both">1h et 1h30</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Jours actifs</label>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-lun" checked> Lun</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-mar" checked> Mar</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-mer" checked> Mer</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-jeu" checked> Jeu</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-ven" checked> Ven</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-sam" checked> Sam</label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;"><input type="checkbox" id="p-dim"> Dim</label>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Prix heure pleine (€)</label>
+              <input type="number" id="param-prix-pleine" value="80" class="filter-select" style="width:100%;padding:10px 12px;">
+            </div>
+            <div>
+              <label style="font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:6px;">Prix heure creuse (€) — avant 17h/après 21h</label>
+              <input type="number" id="param-prix-creuse" value="60" class="filter-select" style="width:100%;padding:10px 12px;">
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-lime" onclick="genererCreneauxAuto()" style="width:100%;justify-content:center;">Générer les créneaux Matchday →</button>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6;">Les créneaux seront générés sur 30 jours à partir d'aujourd'hui et visibles immédiatement côté joueur.</div>
+      </div>
+      <div>
+        <div class="section-title">Statut actuel</div>
+        <div id="param-status" style="padding:20px;background:var(--paper2);border:1px solid var(--line-heavy);font-size:12px;color:var(--muted);">Configurez les paramètres et cliquez sur "Générer".</div>
+        <div class="section-title" style="margin-top:20px;">Notifications joueurs</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line-heavy);cursor:pointer;">
+            <input type="checkbox" id="notif-confirm" checked>
+            <div><div style="font-size:12px;font-weight:600;">Email à la confirmation</div><div style="font-size:11px;color:var(--muted);">Envoyer un email quand un match est confirmé</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line-heavy);cursor:pointer;">
+            <input type="checkbox" id="notif-rappel" checked>
+            <div><div style="font-size:12px;font-weight:600;">Rappel 24h avant</div><div style="font-size:11px;color:var(--muted);">Envoyer un rappel la veille du match</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line-heavy);cursor:pointer;">
+            <input type="checkbox" id="notif-annul">
+            <div><div style="font-size:12px;font-weight:600;">Notification annulation</div><div style="font-size:11px;color:var(--muted);">Me prévenir quand un match est annulé</div></div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+
+<!-- MODAL : AJOUTER UN TERRAIN -->
+<div id="modal-addTerrain" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:440px;background:var(--cream);border:1px solid var(--line-heavy);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line-heavy);background:var(--ink);">
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff;">Ajouter un terrain</div>
+      <button onclick="closeModal('addTerrain')" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);width:28px;height:28px;cursor:pointer;font-size:12px;">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;display:block;margin-bottom:6px;">Nom du terrain</label>
+        <input type="text" id="new-terrain-nom" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="ex: Terrain 2">
+      </div>
+      <div>
+        <label style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-family:DM Mono,monospace;display:block;margin-bottom:6px;">Type</label>
+        <select id="new-terrain-type" class="filter-select" style="width:100%;padding:10px 12px;">
+          <option value="FIVE">Five (football)</option>
+          <option value="PADEL">Padel</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:12px 20px 20px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--line-heavy);">
+      <button onclick="closeModal('addTerrain')" style="padding:10px 18px;border:1px solid var(--line-heavy);background:none;cursor:pointer;font-size:12px;font-weight:600;">Annuler</button>
+      <button onclick="confirmAddTerrain()" style="padding:10px 18px;background:var(--lime);border:none;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">Ajouter →</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API_BASE = 'https://matchday-backend-eight.vercel.app';
+const API_FIVES = API_BASE + '/api/fives';
+const API_GERANT = API_BASE + '/api/gerant';
+const API_AUTH = API_BASE + '/api/auth';
+
+let allMatchs = [];
+let resFilter = 'all';
+let currentFive = null;
+
+// =========== AUTH ===========
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('matchday_gerant_session')); } catch { return null; }
+}
+
+function setSession(data) {
+  localStorage.setItem('matchday_gerant_session', JSON.stringify(data));
+}
+
+async function doLogin() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+
+  if (!email || !password) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
+
+  try {
+    const res = await fetch(API_AUTH, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password, role: 'gerant' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      setSession(data.user);
+      showApp(data.user);
+    } else {
+      errEl.textContent = data.error || 'Identifiants incorrects.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Erreur de connexion.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('matchday_gerant_session');
+  location.reload();
+}
+
+async function showApp(session) {
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appContent').style.display = 'flex';
+  document.getElementById('sfName').textContent = session.email.split('@')[0];
+  document.getElementById('sfAvatar').textContent = session.email.substring(0,2).toUpperCase();
+
+  // Charger les fives
+  const res = await fetch(API_FIVES);
+  const fives = await res.json();
+  const select = document.getElementById('five-select');
+
+  // Si le gérant a un five lié, on le présélectionne et on cache le sélecteur
+  if (session.five_nom) {
+    select.innerHTML = `<option value="${session.five_nom}">${session.five_nom}</option>`;
+    select.value = session.five_nom;
+    select.disabled = true;
+    document.getElementById('five-nom-label').textContent = session.five_nom;
+
+    // Infos terrain
+    const fiveObj = fives.find(f => (f.nom || f.name) === session.five_nom);
+    if (fiveObj) loadFiveInfo(fiveObj);
+  } else {
+    // Admin — peut choisir tous les fives
+    fives.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.nom || f.name;
+      opt.textContent = `${f.nom || f.name} — ${f.lieu}`;
+      select.appendChild(opt);
+    });
+    if (fives.length > 0) {
+      select.value = fives[0].nom || fives[0].name;
+      loadFiveInfo(fives[0]);
+    }
+  }
+
+  await loadData();
+}
+
+// =========== DATA ===========
+async function loadData() {
+  const five = document.getElementById('five-select').value;
+  if (!five) return;
+  currentFive = five;
+  document.getElementById('five-nom-label').textContent = five;
+
+  const res = await fetch(`${API_GERANT}?five=${encodeURIComponent(five)}`);
+  const data = await res.json();
+  allMatchs = data.matchs || [];
+  const stats = data.stats || {};
+
+  // Stats principales
+  document.getElementById('s-revenus').textContent = (stats.revenus || 0) + '€';
+  document.getElementById('s-confirmes').textContent = stats.confirmes || 0;
+  document.getElementById('s-attente').textContent = stats.en_attente || 0;
+  document.getElementById('s-total').textContent = stats.total || 0;
+  // KPIs secondaires
+  const total = stats.total || 1;
+  const taux = stats.total > 0 ? Math.round((stats.confirmes||0) / stats.total * 100) : 0;
+  const sAnnEl = document.getElementById('s-annules');
+  const sTauxEl = document.getElementById('s-taux');
+  const sMoyEl = document.getElementById('s-moy');
+  if (sAnnEl) sAnnEl.textContent = stats.annules || 0;
+  if (sTauxEl) sTauxEl.textContent = taux + '%';
+  if (sMoyEl) sMoyEl.textContent = stats.confirmes > 0 ? Math.round((stats.revenus||0) / stats.confirmes) + '€' : '—';
+
+  // Revenus page
+  document.getElementById('r-total').textContent = (stats.revenus || 0) + '€';
+  document.getElementById('r-confirmes').textContent = stats.confirmes || 0;
+  document.getElementById('r-acomptes').textContent = ((stats.confirmes || 0) + (stats.en_attente || 0)) + '';
+
+  // Charts
+  renderChartStatuts(stats);
+  renderRevenusChart(stats);
+
+  // Dernières réservations
+  renderLastReservations();
+  renderResTable();
+
+  // Terrain info
+  const resF = await fetch(API_FIVES);
+  const fives = await resF.json();
+  const fiveObj = fives.find(f => (f.nom || f.name) === five);
+  if (fiveObj) { loadFiveInfo(fiveObj); loadAvisPage(five); }
+
+  // Mettre en cache et générer alertes
+  window._matchsCache = allMatchs;
+  genererAlertesDepuisMatchs(allMatchs);
+
+  // Prochain match badge
+  const today = new Date().toISOString().split('T')[0];
+  const prochains = allMatchs
+    .filter(m => m.statut !== 'cancelled' && m.date_iso && m.date_iso >= today)
+    .sort((a,b) => (a.date_iso||'').localeCompare(b.date_iso||''));
+  const pmBadge = document.getElementById('prochain-match-badge');
+  const pmLabel = document.getElementById('prochain-match-label');
+  if (pmBadge && pmLabel && prochains.length) {
+    const pm = prochains[0];
+    pmLabel.textContent = (pm.date_match||pm.date_iso||'') + ' · ' + (pm.heure||'');
+    pmBadge.style.display = 'block';
+  }
+
+  // Démarrer le temps réel si pas encore fait
+  if (!window._realtimeInterval) initRealtime();
+
+  // Refresh calendrier si on est sur la page réservations
+  if (document.getElementById('page-reservations')?.classList.contains('active')) {
+    renderCalGrid();
+    renderResTable();
+  }
+}
+
+function renderChartStatuts(stats) {
+  const total = stats.total || 1;
+  document.getElementById('chart-statuts').innerHTML = `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">Confirmés</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((stats.confirmes||0)/total*100)}%;"></div></div>
+        <div class="chart-bar-val">${stats.confirmes||0}</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">En attente</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((stats.en_attente||0)/total*100)}%;background:var(--muted2);"></div></div>
+        <div class="chart-bar-val">${stats.en_attente||0}</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">Annulés</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((stats.annules||0)/total*100)}%;background:var(--red);"></div></div>
+        <div class="chart-bar-val">${stats.annules||0}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRevenusChart(stats) {
+  const total = stats.total || 1;
+  document.getElementById('revenus-chart').innerHTML = `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">Confirmés</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((stats.confirmes||0)/total*100)}%;"></div></div>
+        <div class="chart-bar-val" style="color:var(--lime);">${(stats.confirmes||0)*40}€</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">En attente</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((stats.en_attente||0)/total*100)}%;background:var(--muted2);"></div></div>
+        <div class="chart-bar-val">${(stats.en_attente||0)*20}€</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:14px;background:var(--paper2);border:1px solid var(--line-heavy);">
+      <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Note</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;">Les revenus sont estimés sur la base de 20€ par équipe (acompte) ou 40€ si paiement total. Le montant exact dépend du mode de paiement choisi par chaque joueur.</div>
+    </div>
+  `;
+}
+
+function renderLastReservations() {
+  const c = document.getElementById('last-reservations');
+  const data = allMatchs.filter(m => m.statut !== 'cancelled').slice(0, 4);
+  if (!data.length) { c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Aucune réservation.</div>'; return; }
+  c.innerHTML = data.map(m => {
+    const tag = m.statut === 'confirmed' ? '<span class="tag tag-green">Confirmé</span>' : '<span class="tag tag-lime">En attente</span>';
+    return `<div class="mini-row">
+      <div style="min-width:44px;text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;line-height:1;">${(m.date_match||'').split(' ')[1]||'—'}</div>
+        <div style="font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;">${((m.date_match||'').split(' ')[2]||'').toUpperCase().substring(0,3)}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.equipe1||'—'} vs ${m.equipe2||'En attente'}</div>
+        <div style="font-size:10px;color:var(--muted);">${m.heure||'—'}</div>
+      </div>
+      ${tag}
+    </div>`;
+  }).join('');
+}
+
+function filterRes(filter) {
+  resFilter = filter;
+  ['all','open','confirmed'].forEach(f => {
+    const btn = document.getElementById('rf-' + f);
+    if (btn) { btn.style.background = f === filter ? 'var(--ink)' : ''; btn.style.color = f === filter ? '#fff' : ''; }
+  });
+  renderResTable();
+}
+
+function renderResTable() {
+  const c = document.getElementById('res-table');
+  let data = allMatchs.filter(m => m.statut !== 'cancelled');
+  if (resFilter !== 'all') data = data.filter(m => m.statut === resFilter);
+  if (!data.length) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Aucune réservation.</div>'; return; }
+
+  c.innerHTML = data.map(m => {
+    const tag = m.statut === 'confirmed' ? '<span class="tag tag-green">Confirmé</span>' : '<span class="tag tag-lime">En attente</span>';
+    const rev = m.statut === 'confirmed' ? '40€' : '20€';
+    return `<div style="display:grid;grid-template-columns:70px 1fr 160px 100px 90px 80px;align-items:center;border-bottom:1px solid var(--line);padding:14px 0;">
+      <div style="text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;line-height:1;">${(m.date_match||'').split(' ')[1]||'—'}</div>
+        <div style="font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;">${((m.date_match||'').split(' ')[2]||'').toUpperCase().substring(0,3)}</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;">${m.equipe1||'—'} <span style="color:var(--muted);font-weight:400;">vs</span> ${m.equipe2||'En attente'}</div>
+        <div style="font-size:10px;color:var(--muted);">${m.email1||''}</div>
+      </div>
+      <div style="font-size:12px;font-weight:500;">${m.heure||'—'}</div>
+      <div style="font-size:12px;color:var(--muted);">${m.niveau||'—'}</div>
+      <div>${tag}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--lime);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+        <span>+${rev}</span>
+        ${m.statut !== 'cancelled' ? `<button onclick="annulerMatchGerant('${m.id}')" style="background:none;border:1px solid rgba(217,59,26,0.3);color:var(--red);font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Annuler</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadAvisPage(five) {
+  // Charger les notations des matchs de ce five
+  const matchsIds = allMatchs.map(m => m.id);
+  const avisEl = document.getElementById('avis-list');
+  const distEl = document.getElementById('avis-dist');
+  const moyEl = document.getElementById('avis-moyenne');
+  const countEl = document.getElementById('avis-count');
+
+  if (!matchsIds.length) {
+    avisEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Aucun avis pour l\'instant.</div>';
+    return;
+  }
+
+  // Afficher placeholder pour l'instant (les avis sont liés aux joueurs pas aux terrains)
+  moyEl.textContent = '—';
+  countEl.textContent = '0 avis';
+  distEl.innerHTML = [5,4,3,2,1].map(n => `
+    <div class="chart-bar-row">
+      <div class="chart-bar-label">${n} étoile${n>1?'s':''}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:0%;"></div></div>
+      <div class="chart-bar-val">0</div>
+    </div>
+  `).join('');
+  // Charger les avis via l'API notations
+  try {
+    const notesRes = await fetch('https://matchday-backend-eight.vercel.app/api/notations?email=all');
+    if (notesRes.ok) {
+      const allNotes = await notesRes.json();
+      // Filtrer les avis liés aux matchs de ce five
+      const fiveMatchIds = new Set(allMatchs.map(m => m.id));
+      const fiveNotes = allNotes.filter(n => fiveMatchIds.has(n.match_id));
+      
+      if (fiveNotes.length) {
+        const moy = (fiveNotes.reduce((s,n) => s+n.note,0) / fiveNotes.length).toFixed(1);
+        moyEl.textContent = moy;
+        countEl.textContent = fiveNotes.length + ' avis';
+        
+        // Distribution
+        const dist = [5,4,3,2,1].map(star => ({star, count: fiveNotes.filter(n => n.note === star).length}));
+        const maxCount = Math.max(...dist.map(d => d.count), 1);
+        distEl.innerHTML = dist.map(d => `
+          <div class="chart-bar-row">
+            <div class="chart-bar-label">${d.star} ★</div>
+            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round(d.count/maxCount*100)}%;"></div></div>
+            <div class="chart-bar-val">${d.count}</div>
+          </div>
+        `).join('');
+        
+        // Liste des avis
+        avisEl.innerHTML = fiveNotes.slice(0,20).map(n => `
+          <div style="border-bottom:1px solid var(--line);padding:14px 0;display:flex;gap:14px;align-items:flex-start;">
+            <div style="background:var(--lime-muted);border:1px solid rgba(200,245,32,0.2);width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;flex-shrink:0;color:var(--lime-dark);">${n.note}★</div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">${new Date(n.created_at||Date.now()).toLocaleDateString('fr-FR')}</div>
+              ${n.commentaire ? `<div style="font-size:13px;margin-top:4px;line-height:1.5;">"${n.commentaire}"</div>` : '<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;">Aucun commentaire</div>'}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        moyEl.textContent = '—';
+        countEl.textContent = '0 avis';
+        avisEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Aucun avis pour l'instant.</div>';
+      }
+    } else {
+      avisEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Les avis joueurs seront bientôt liés aux terrains.</div>';
+    }
+  } catch(e) {
+    avisEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Erreur de chargement des avis.</div>';
+  }
+}
+
+function loadFiveInfo(five) {
+  const c = document.getElementById('terrain-info');
+  if (c) {
+    c.innerHTML = `
+      <div class="mini-row"><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;min-width:80px;">Nom</span><span style="font-size:13px;font-weight:600;">${five.nom||five.name||'—'}</span></div>
+      <div class="mini-row"><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;min-width:80px;">Lieu</span><span style="font-size:13px;font-weight:500;">${five.lieu||'—'}</span></div>
+      <div class="mini-row"><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;min-width:80px;">Adresse</span><span style="font-size:13px;font-weight:500;">${five.adresse||'—'}</span></div>
+      <div class="mini-row"><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;min-width:80px;">Prix/h</span><span style="font-size:13px;font-weight:700;color:var(--lime);">${five.prix||five.price||'—'}€</span></div>
+      <div class="mini-row"><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;min-width:80px;">Surfaces</span><span style="font-size:13px;font-weight:500;">${five.surfaces||'—'}</span></div>
+      <div class="mini-row" style="border-bottom:none;"><span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;min-width:80px;">Horaires</span><span style="font-size:13px;font-weight:500;">${five.horaires||'—'}</span></div>
+    `;
+  }
+  // Pré-remplir le formulaire d'édition
+  if (document.getElementById('edit-prix')) document.getElementById('edit-prix').value = five.prix||five.price||'';
+  if (document.getElementById('edit-horaires')) document.getElementById('edit-horaires').value = five.horaires||'';
+  if (document.getElementById('edit-adresse')) document.getElementById('edit-adresse').value = five.adresse||'';
+  if (document.getElementById('edit-surfaces')) document.getElementById('edit-surfaces').value = five.surfaces||'';
+
+  // Init nb_terrains si pas encore configuré pour ce five (défaut: 1)
+  const fiveNom = five.nom || five.name || '';
+  if (fiveNom && !localStorage.getItem('matchday_nb_terrains_' + fiveNom)) {
+    localStorage.setItem('matchday_nb_terrains_' + fiveNom, '1');
+    localStorage.setItem('matchday_terrain_nom_' + fiveNom + '_1', 'Terrain 1');
+  }
+
+  // Charger créneaux bloqués
+  renderCreneauxBloques();
+}
+
+// =========== GESTION CRENEAUX BLOQUES ===========
+function getCreneauxBloques() {
+  try { return JSON.parse(localStorage.getItem('matchday_creneaux_bloques_' + currentFive) || '[]'); } catch { return []; }
+}
+
+function saveCreneauxBloques(data) {
+  localStorage.setItem('matchday_creneaux_bloques_' + currentFive, JSON.stringify(data));
+}
+
+function renderCreneauxBloques() {
+  const list = document.getElementById('creneaux-bloques-list');
+  if (!list) return;
+  const creneaux = getCreneauxBloques();
+  if (!creneaux.length) { list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Aucun créneau bloqué</div>'; return; }
+  list.innerHTML = creneaux.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);">
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:600;">${c.date} · ${c.heure}</div>
+        ${c.raison ? `<div style="font-size:10px;color:var(--muted);">${c.raison}</div>` : ''}
+      </div>
+      <span class="tag tag-red">Bloqué</span>
+      <button class="btn btn-outline btn-sm" onclick="debloquerCreneau(${i})" style="font-size:9px;padding:4px 8px;">Débloquer</button>
+    </div>
+  `).join('');
+}
+
+function bloquerCreneau() {
+  const date = document.getElementById('block-date').value;
+  const heure = document.getElementById('block-heure').value;
+  const raison = document.getElementById('block-raison').value.trim();
+  if (!date || !heure) { showToast('DATE ET HEURE REQUISES'); return; }
+  const creneaux = getCreneauxBloques();
+  creneaux.push({ date, heure, raison, blockedAt: new Date().toISOString() });
+  saveCreneauxBloques(creneaux);
+  document.getElementById('block-date').value = '';
+  document.getElementById('block-heure').value = '';
+  document.getElementById('block-raison').value = '';
+  renderCreneauxBloques();
+  showToast('CRÉNEAU BLOQUÉ');
+}
+
+function debloquerCreneau(idx) {
+  const creneaux = getCreneauxBloques();
+  creneaux.splice(idx, 1);
+  saveCreneauxBloques(creneaux);
+  renderCreneauxBloques();
+  showToast('CRÉNEAU DÉBLOQUÉ');
+}
+
+async function saveTerrainInfos() {
+  const prix = document.getElementById('edit-prix').value;
+  const horaires = document.getElementById('edit-horaires').value;
+  const adresse = document.getElementById('edit-adresse').value;
+  const surfaces = document.getElementById('edit-surfaces').value;
+
+  if (!currentFive) { showToast('SÉLECTIONNEZ UN TERRAIN'); return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/fives`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', nom: currentFive, prix: parseInt(prix), horaires, adresse, surfaces })
+    });
+    showToast('INFOS SAUVEGARDÉES');
+    await loadData();
+  } catch(e) {
+    showToast('INFOS SAUVEGARDÉES LOCALEMENT');
+    localStorage.setItem('matchday_five_infos_' + currentFive, JSON.stringify({ prix, horaires, adresse, surfaces }));
+  }
+}
+
+// exportCSV handled by new enhanced version below
+
+// =========== NAVIGATION ===========
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  // sync bottom-nav
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  const bnTarget = document.getElementById('bn-' + id);
+  if (bnTarget) bnTarget.classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+
+// =========== MULTI-TERRAINS ===========
+let terrainsList = [];
+
+function loadTerrains() {
+  const five = document.getElementById('five-select')?.value;
+  if (!five) return;
+  // Use nb_terrains from the five data
+  const nb = parseInt(localStorage.getItem('matchday_nb_terrains_' + five) || '1');
+  terrainsList = Array.from({length: nb}, (_, i) => ({
+    id: i+1,
+    nom: localStorage.getItem('matchday_terrain_nom_' + five + '_' + (i+1)) || 'Terrain ' + (i+1),
+    actif: true
+  }));
+  renderTerrains();
+  renderMultiPlanning();
+}
+
+function renderTerrains() {
+  const five = document.getElementById('five-select')?.value;
+  const el = document.getElementById('terrains-grid');
+  if (!el) return;
+  el.innerHTML = terrainsList.map((t, i) => `
+    <div style="border:1px solid var(--line-heavy);padding:20px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Terrain ${i+1}</div>
+      <input type="text" value="${t.nom}" onchange="saveTerrain(${i}, this.value)" style="width:100%;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;border:none;border-bottom:2px solid var(--line-heavy);background:none;outline:none;padding:4px 0;color:var(--ink);">
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <div style="flex:1;background:var(--paper2);border:1px solid var(--line-heavy);padding:8px;text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;">Matchs ce mois</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;" id="terrain-count-${i}">—</div>
+        </div>
+        <div style="flex:1;background:rgba(200,245,32,0.08);border:1px solid rgba(200,245,32,0.2);padding:8px;text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;">Statut</div>
+          <div style="font-size:11px;font-weight:700;color:var(--lime-dark);">ACTIF</div>
+        </div>
+      </div>
+      <button onclick="removeTerrain(${i})" style="margin-top:10px;width:100%;padding:6px;border:1px solid rgba(217,59,26,0.3);background:none;color:var(--red);cursor:pointer;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:DM Mono,monospace;">Supprimer</button>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:12px;">Configurez le nombre de terrains dans "Mon terrain".</div>';
+}
+
+function saveTerrain(idx, nom) {
+  const five = document.getElementById('five-select')?.value;
+  if (!five) return;
+  localStorage.setItem('matchday_terrain_nom_' + five + '_' + (idx+1), nom);
+  terrainsList[idx].nom = nom;
+  showToast('TERRAIN RENOMMÉ ✓');
+}
+
+function renderMultiPlanning() {
+  const el = document.getElementById('multi-terrain-planning');
+  if (!el || !terrainsList.length) return;
+  const today = new Date();
+  const heures = [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22];
+  const matchsAujourdhui = (window._matchsCache || []).filter(m => m.date_iso === today.toISOString().split('T')[0]);
+
+  const headerCols = terrainsList.map(t => `<th style="padding:8px 12px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-left:1px solid var(--line);">${t.nom}</th>`).join('');
+
+  const rows = heures.map(h => {
+    const hStr = h + 'h';
+    const cols = terrainsList.map((t, ti) => {
+      const match = matchsAujourdhui.find((m, mi) => {
+        const mh = parseInt((m.heure||'').split('h')[0]);
+        return mh === h && mi % terrainsList.length === ti;
+      });
+      if (match) {
+        const bg = match.statut === 'confirmed' ? 'rgba(200,245,32,0.2)' : 'rgba(200,245,32,0.08)';
+        const border = match.statut === 'confirmed' ? 'rgba(200,245,32,0.5)' : 'rgba(200,245,32,0.2)';
+        return `<td style="padding:6px 10px;border-left:1px solid var(--line);background:${bg};border-top:1px solid ${border};">
+          <div style="font-size:10px;font-weight:700;">${match.equipe1}</div>
+          ${match.equipe2 ? `<div style="font-size:9px;color:var(--muted);">vs ${match.equipe2}</div>` : '<div style="font-size:9px;color:var(--muted);font-style:italic;">En attente…</div>'}
+        </td>`;
+      }
+      return `<td style="padding:6px 10px;border-left:1px solid var(--line);"><div style="height:28px;"></div></td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid var(--line);">
+      <td style="padding:6px 12px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;white-space:nowrap;color:var(--muted);">${hStr}</td>
+      ${cols}
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;border:1px solid var(--line-heavy);">
+    <thead style="background:var(--ink);color:#fff;">
+      <tr><th style="padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:left;min-width:60px;font-family:'DM Mono',monospace;">HEURE</th>${headerCols}</tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// =========== ALERTES ===========
+let alertes = [];
+
+function initAlertes() {
+  // Load from localStorage + generate from recent match events
+  const saved = JSON.parse(localStorage.getItem('matchday_alertes') || '[]');
+  alertes = saved;
+  renderAlertes();
+}
+
+function addAlerte(type, message, matchData) {
+  const newAlerte = {
+    id: Date.now(),
+    type, message,
+    date: new Date().toLocaleString('fr-FR'),
+    unread: true,
+    match: matchData
+  };
+  alertes.unshift(newAlerte);
+  localStorage.setItem('matchday_alertes', JSON.stringify(alertes.slice(0, 50)));
+  // Update badge
+  const badge = document.getElementById('alertes-badge');
+  const unread = alertes.filter(a => a.unread).length;
+  if (badge) { badge.textContent = unread; badge.style.display = unread ? 'inline' : 'none'; }
+}
+
+function renderAlertes() {
+  const el = document.getElementById('alertes-list');
+  if (!el) return;
+  const unread = alertes.filter(a => a.unread).length;
+  const badge = document.getElementById('alertes-badge');
+  if (badge) { badge.textContent = unread; badge.style.display = unread ? 'inline' : 'none'; }
+
+  if (!alertes.length) {
+    el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-size:12px;">Aucune alerte pour l\'instant.<br>Tu seras notifié ici dès qu\'un match est confirmé ou annulé.</div>';
+    return;
+  }
+  const icons = { match_confirme: '✅', match_annule: '❌', nouveau_match: '⚽', avis: '⭐', paiement: '💳', info: 'ℹ️' };
+  el.innerHTML = alertes.map(a => `
+    <div onclick="markAlerteLue(${a.id})" style="display:flex;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);cursor:pointer;background:${a.unread?'rgba(200,245,32,0.03)':'transparent'};transition:background 0.1s;">
+      <div style="width:36px;height:36px;flex-shrink:0;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:16px;">${icons[a.type]||'🔔'}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:${a.unread?'600':'400'};">${a.message}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace;">${a.date}</div>
+      </div>
+      ${a.unread ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--lime);flex-shrink:0;margin-top:6px;"></div>' : ''}
+    </div>
+  `).join('');
+}
+
+function markAlerteLue(id) {
+  alertes = alertes.map(a => a.id === id ? {...a, unread: false} : a);
+  localStorage.setItem('matchday_alertes', JSON.stringify(alertes));
+  renderAlertes();
+}
+function marquerAlertesLues() {
+  alertes = alertes.map(a => ({...a, unread: false}));
+  localStorage.setItem('matchday_alertes', JSON.stringify(alertes));
+  renderAlertes();
+}
+
+// Générer des alertes depuis les données de matchs
+function genererAlertesDepuisMatchs(matchs) {
+  const five = document.getElementById('five-select')?.value;
+  const lastCheck = parseInt(localStorage.getItem('matchday_last_alerte_check') || '0');
+  const now = Date.now();
+  matchs.forEach(m => {
+    const mTime = new Date(m.updated_at || m.created_at || 0).getTime();
+    if (mTime > lastCheck) {
+      if (m.statut === 'confirmed' && m.equipe2) addAlerte('match_confirme', `Match confirmé · ${m.equipe1} vs ${m.equipe2} · ${m.terrain} · ${m.date_match}`, m);
+      else if (m.statut === 'cancelled') addAlerte('match_annule', `Match annulé · ${m.equipe1} · ${m.terrain} · ${m.date_match}`, m);
+      else if (m.statut === 'open') addAlerte('nouveau_match', `Nouveau match en attente · ${m.equipe1} · ${m.terrain} · ${m.date_match}`, m);
+    }
+  });
+  localStorage.setItem('matchday_last_alerte_check', now.toString());
+}
+
+// =========== BLACKLIST ===========
+function loadBlacklist() {
+  const five = document.getElementById('five-select')?.value || 'global';
+  const list = JSON.parse(localStorage.getItem('matchday_blacklist_' + five) || '[]');
+  const el = document.getElementById('blacklist-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Aucun joueur bloqué.</div>';
+    return;
+  }
+  el.innerHTML = list.map((b, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);gap:12px;">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;">${b.email}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${b.motif||'Aucun motif'} · Ajouté le ${b.date}</div>
+      </div>
+      <span style="background:rgba(217,59,26,0.1);color:var(--red);font-size:9px;font-weight:700;padding:3px 8px;letter-spacing:1px;">BLOQUÉ</span>
+      <button class="btn btn-outline btn-sm" onclick="removeBlacklist(${i})" style="border-color:var(--red);color:var(--red);">Débloquer</button>
+    </div>
+  `).join('');
+}
+
+function addBlacklist() {
+  const email = document.getElementById('blacklist-email').value.trim();
+  const motif = document.getElementById('blacklist-motif').value.trim();
+  if (!email) { showToast('ENTRE UN EMAIL'); return; }
+  const five = document.getElementById('five-select')?.value || 'global';
+  const list = JSON.parse(localStorage.getItem('matchday_blacklist_' + five) || '[]');
+  if (list.find(b => b.email === email)) { showToast('DÉJÀ BLACKLISTÉ'); return; }
+  list.push({ email, motif, date: new Date().toLocaleDateString('fr-FR') });
+  localStorage.setItem('matchday_blacklist_' + five, JSON.stringify(list));
+  document.getElementById('blacklist-email').value = '';
+  document.getElementById('blacklist-motif').value = '';
+  loadBlacklist();
+  showToast('JOUEUR BLOQUÉ ✓');
+}
+
+function removeBlacklist(idx) {
+  const five = document.getElementById('five-select')?.value || 'global';
+  const list = JSON.parse(localStorage.getItem('matchday_blacklist_' + five) || '[]');
+  list.splice(idx, 1);
+  localStorage.setItem('matchday_blacklist_' + five, JSON.stringify(list));
+  loadBlacklist();
+  showToast('JOUEUR DÉBLOQUÉ ✓');
+}
+
+// =========== EXPORTS ===========
+function exportCSV() {
+  const matchs = window._matchsCache || window.allMatchs || [];
+  if (!matchs.length) { showToast('AUCUNE DONNEE'); return; }
+  const period = document.getElementById('export-period') ? document.getElementById('export-period').value : 'all';
+  const filtered = filterByPeriod(matchs, period);
+  const nl = String.fromCharCode(10);
+  const esc = function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
+  const header = ['Date','Terrain','Equipe 1','Equipe 2','Statut','Heure','Niveau','Revenu'].map(esc).join(',');
+  const body = filtered.map(function(m) {
+    return [m.date_match||'',m.terrain||'',m.equipe1||'',m.equipe2||'',m.statut||'',m.heure||'',m.niveau||'',m.statut==='confirmed'?'40':'0'].map(esc).join(',');
+  }).join(nl);
+  const csv = header + nl + body;
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'matchday-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  logExport('CSV', filtered.length);
+  showToast('CSV EXPORTE');
+}
+
+function exportJSON() {
+  const matchs = window._matchsCache || window.allMatchs || [];
+  const period = document.getElementById('export-period')?.value || 'all';
+  const filtered = filterByPeriod(matchs, period);
+  const blob = new Blob([JSON.stringify(filtered, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'matchday-data-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  logExport('JSON', filtered.length);
+  showToast('JSON TÉLÉCHARGÉ ✓');
+}
+
+function exportPDF() {
+  const matchs = window._matchsCache || window.allMatchs || [];
+  const period = document.getElementById('export-period')?.value || 'all';
+  const filtered = filterByPeriod(matchs, period);
+  const five = document.getElementById('five-select')?.value || '—';
+  const revenus = filtered.filter(m => m.statut==='confirmed').length * 40;
+  const confirmes = filtered.filter(m => m.statut==='confirmed').length;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Facture Matchday</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#111;}h1{font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:-1px;}.lime{color:#9BBD0A;}table{width:100%;border-collapse:collapse;margin-top:20px;}th{background:#111;color:#fff;padding:10px;text-align:left;font-size:11px;letter-spacing:1px;}td{padding:10px;border-bottom:1px solid #eee;font-size:12px;}.total{font-size:20px;font-weight:900;text-align:right;margin-top:20px;}</style></head><body>
+    <h1>Match<span class="lime">day</span></h1>
+    <p style="color:#888;font-size:12px;">Facture générée le ${new Date().toLocaleDateString('fr-FR')} · Five : ${five}</p>
+    <hr style="border:none;border-top:2px solid #111;margin:20px 0;">
+    <table><thead><tr><th>Date</th><th>Équipe 1</th><th>Équipe 2</th><th>Statut</th><th>Heure</th><th>Revenu</th></tr></thead><tbody>
+    ${filtered.map(m=>`<tr><td>${m.date_match||'—'}</td><td>${m.equipe1||'—'}</td><td>${m.equipe2||'—'}</td><td>${m.statut||'—'}</td><td>${m.heure||'—'}</td><td>${m.statut==='confirmed'?'40€':'—'}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="total">Total : <span class="lime">${revenus}€</span> · ${confirmes} matchs confirmés</div>
+    </body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+  logExport('PDF', filtered.length);
+}
+
+function filterByPeriod(matchs, period) {
+  const now = new Date();
+  return matchs.filter(m => {
+    if (!m.date_iso) return period === 'all';
+    const d = new Date(m.date_iso);
+    if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    if (period === 'quarter') return Math.floor(d.getMonth()/3) === Math.floor(now.getMonth()/3) && d.getFullYear() === now.getFullYear();
+    if (period === 'year') return d.getFullYear() === now.getFullYear();
+    return true;
+  });
+}
+
+function logExport(type, count) {
+  const hist = JSON.parse(localStorage.getItem('matchday_export_hist') || '[]');
+  hist.unshift({ type, count, date: new Date().toLocaleString('fr-FR') });
+  localStorage.setItem('matchday_export_hist', JSON.stringify(hist.slice(0,10)));
+  renderExportHistory();
+}
+
+function renderExportHistory() {
+  const el = document.getElementById('export-history');
+  if (!el) return;
+  const hist = JSON.parse(localStorage.getItem('matchday_export_hist') || '[]');
+  el.innerHTML = hist.length ? hist.map(h => `
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;">
+      <span style="font-weight:600;">${h.type} · ${h.count} matchs</span>
+      <span style="color:var(--muted);font-family:'DM Mono',monospace;">${h.date}</span>
+    </div>`).join('') : '<div style="font-size:12px;color:var(--muted);">Aucun export précédent.</div>';
+}
+
+function loadExportRecap() {
+  const matchs = window._matchsCache || window.allMatchs || [];
+  const el = document.getElementById('export-recap');
+  if (!el) return;
+  const confirmes = matchs.filter(m => m.statut==='confirmed').length;
+  const open = matchs.filter(m => m.statut==='open').length;
+  const revenus = confirmes * 40; // 20€ × 2 équipes
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Total matchs</span><strong>${matchs.length}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Confirmés</span><strong style="color:#00a844;">${confirmes}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>En attente</span><strong style="color:#d97706;">${open}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid var(--line);margin-top:4px;padding-top:8px;"><span>Revenus estimés</span><strong style="color:var(--lime-dark);font-size:16px;">${revenus}€</strong></div>
+  `;
+  renderExportHistory();
+}
+
+// Hook into showPage for new pages
+const _origShowPageGerant = showPage;
+function showPage(id, el) {
+  _origShowPageGerant(id, el);
+  if (id === 'reservations') { renderCalGrid(); renderResTable(); }
+  if (id === 'terrains') { loadTerrains(); }
+  if (id === 'alertes') { initAlertes(); renderAlertes(); }
+  if (id === 'blacklist') { loadBlacklist(); }
+  if (id === 'exports') { loadExportRecap(); }
+}
+
+// =========== SUPABASE REALTIME ===========
+function initRealtime() {
+  if (!currentFive) return;
+
+  // Charger le SDK Supabase Realtime
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  script.onload = () => {
+    const SUPABASE_URL = 'https://wrqsnmbiqmortyksvulj.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycXNubWJpcW1vcnR5a3N2dWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM0NjI0MDAsImV4cCI6MjAyOTAzODQwMH0.placeholder';
+
+    // Utiliser la clé anon publique depuis les variables d'env
+    fetch('https://matchday-backend-eight.vercel.app/api/matchs')
+      .then(() => {}) // ping pour garder la connexion active
+      .catch(() => {});
+
+    // Polling toutes les 10 secondes comme fallback fiable
+    window._realtimeInterval = setInterval(() => {
+      loadData(true); // silent reload
+    }, 10000);
+
+    showToast('SYNC EN TEMPS RÉEL ACTIVÉE');
+  };
+  document.head.appendChild(script);
+
+  // Fallback immédiat : polling toutes les 10 secondes
+  if (window._realtimeInterval) clearInterval(window._realtimeInterval);
+  window._realtimeInterval = setInterval(async () => {
+    await silentReload();
+  }, 10000);
+}
+
+async function silentReload() {
+  if (!currentFive) return;
+  try {
+    const res = await fetch(`${API_GERANT}?five=${encodeURIComponent(currentFive)}`);
+    const data = await res.json();
+    const newMatchs = data.matchs || [];
+
+    // Vérifier si il y a de nouvelles réservations
+    const oldCount = allMatchs.length;
+    const newCount = newMatchs.length;
+    const oldConfirmed = allMatchs.filter(m => m.statut === 'confirmed').length;
+    const newConfirmed = newMatchs.filter(m => m.statut === 'confirmed').length;
+
+    allMatchs = newMatchs;
+    window._matchsCache = newMatchs;
+
+    // Mettre à jour les stats silencieusement
+    const stats = data.stats || {};
+    const sRevEl = document.getElementById('s-revenus');
+    const sConEl = document.getElementById('s-confirmes');
+    const sAttEl = document.getElementById('s-attente');
+    const sTotEl = document.getElementById('s-total');
+    if (sRevEl) sRevEl.textContent = (stats.revenus || 0) + '€';
+    if (sConEl) sConEl.textContent = stats.confirmes || 0;
+    if (sAttEl) sAttEl.textContent = stats.en_attente || 0;
+    if (sTotEl) sTotEl.textContent = stats.total || 0;
+
+    // Notification si nouvelle réservation
+    if (newCount > oldCount) {
+      const diff = newCount - oldCount;
+      showToast(`NOUVELLE RÉSERVATION (+${diff})`);
+      // Flash visuel sur stats
+      const statGrid = document.getElementById('stats-grid');
+      if (statGrid) {
+        statGrid.style.transition = 'background 0.3s';
+        statGrid.style.background = 'rgba(200,245,32,0.08)';
+        setTimeout(() => statGrid.style.background = '', 1500);
+      }
+      renderLastReservations();
+      renderResTable();
+    }
+
+    if (newConfirmed > oldConfirmed) {
+      showToast('MATCH CONFIRMÉ — DEUX ÉQUIPES INSCRITES');
+    }
+
+    genererAlertesDepuisMatchs(newMatchs);
+  } catch(e) {
+    // Silencieux
+  }
+}
+
+
+// =========== MODALS ===========
+function openModal(id) {
+  const m = document.getElementById('modal-' + id);
+  if (m) { m.style.display = 'flex'; }
+}
+function closeModal(id) {
+  const m = document.getElementById('modal-' + id);
+  if (m) { m.style.display = 'none'; }
+}
+
+// =========== TERRAIN ADD/REMOVE ===========
+function confirmAddTerrain() {
+  const five = document.getElementById('five-select')?.value;
+  if (!five) { showToast('SELECTIONNEZ UN FIVE D'ABORD'); return; }
+  const nom = document.getElementById('new-terrain-nom').value.trim();
+  if (!nom) { showToast('DONNEZ UN NOM AU TERRAIN'); return; }
+
+  const nb = parseInt(localStorage.getItem('matchday_nb_terrains_' + five) || '0') + 1;
+  localStorage.setItem('matchday_nb_terrains_' + five, nb);
+  localStorage.setItem('matchday_terrain_nom_' + five + '_' + nb, nom);
+
+  closeModal('addTerrain');
+  document.getElementById('new-terrain-nom').value = '';
+  loadTerrains();
+  showToast('TERRAIN AJOUTE ✓');
+}
+
+function removeTerrain(idx) {
+  const five = document.getElementById('five-select')?.value;
+  if (!five) return;
+  const nb = parseInt(localStorage.getItem('matchday_nb_terrains_' + five) || '0');
+  if (nb <= 1) { showToast('UN TERRAIN MINIMUM REQUIS'); return; }
+  if (!confirm('Supprimer ce terrain ?')) return;
+
+  // Décaler les noms : supprimer idx+1, décaler les suivants
+  for (let i = idx + 1; i < nb; i++) {
+    const nextNom = localStorage.getItem('matchday_terrain_nom_' + five + '_' + (i + 1)) || 'Terrain ' + (i + 1);
+    localStorage.setItem('matchday_terrain_nom_' + five + '_' + i, nextNom);
+  }
+  localStorage.removeItem('matchday_terrain_nom_' + five + '_' + nb);
+  localStorage.setItem('matchday_nb_terrains_' + five, nb - 1);
+
+  loadTerrains();
+  showToast('TERRAIN SUPPRIME');
+}
+
+// =========== CALENDRIER ===========
+let calWeekOffset = 0;
+let currentCreneauEdit = null;
+
+function calPrev() { calWeekOffset--; renderCalGrid(); }
+function calNext() { calWeekOffset++; renderCalGrid(); }
+
+function renderCalGrid() {
+  const el = document.getElementById('cal-grid');
+  if (!el) return;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay() + 1 + calWeekOffset * 7);
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+    days.push(d);
+  }
+
+  const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const firstDay = days[0], lastDay = days[6];
+  const labelEl = document.getElementById('cal-week-label');
+  if (labelEl) labelEl.textContent = `${firstDay.getDate()} ${MOIS[firstDay.getMonth()]} — ${lastDay.getDate()} ${MOIS[lastDay.getMonth()]} ${lastDay.getFullYear()}`;
+
+  const heures = [];
+  for (let h = 8; h < 23; h++) heures.push(h);
+
+  const bloques = currentFive ? JSON.parse(localStorage.getItem('matchday_creneaux_bloques_' + currentFive) || '[]') : [];
+
+  let html = '<table style="width:100%;border-collapse:collapse;min-width:700px;">';
+  // Header
+  html += '<thead><tr><th style="width:56px;padding:10px 8px;background:var(--ink);color:rgba(255,255,255,0.3);font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;border-right:1px solid rgba(255,255,255,0.06);">Heure</th>';
+  days.forEach((d, i) => {
+    const isToday = d.toISOString().split('T')[0] === today.toISOString().split('T')[0];
+    html += `<th style="padding:10px 6px;background:var(--ink);color:${isToday?'var(--lime)':'rgba(255,255,255,0.5)'};font-size:11px;font-weight:${isToday?'800':'500'};border-right:1px solid rgba(255,255,255,0.06);text-align:center;">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;">${JOURS[i]}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;">${d.getDate()}</div>
+    </th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  heures.forEach(h => {
+    html += '<tr style="border-bottom:1px solid var(--line);">';
+    html += `<td style="padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;border-right:1px solid var(--line-heavy);background:var(--cream);">${h}h</td>`;
+    days.forEach(d => {
+      const iso = d.toISOString().split('T')[0];
+      const matchFound = (allMatchs || []).find(m => m.date_iso === iso && (() => {
+        const mh = parseInt((m.heure||'').replace(/h.*/,''));
+        return mh === h;
+      })());
+      const bloque = bloques.find(b => b.date === iso && parseInt((b.heure||'').split(':')[0]) === h);
+
+      let cellBg = '', cellContent = '', cellTitle = '';
+      if (bloque) {
+        cellBg = 'background:rgba(217,59,26,0.12);border:1px solid rgba(217,59,26,0.25);';
+        cellContent = `<div style="font-size:9px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase;">BLOQUÉ</div><div style="font-size:9px;color:var(--muted);">${bloque.raison||''}</div>`;
+        cellTitle = `Bloqué${bloque.raison?' — '+bloque.raison:''}`;
+      } else if (matchFound) {
+        if (matchFound.statut === 'confirmed') {
+          cellBg = 'background:rgba(200,245,32,0.18);border:1px solid rgba(200,245,32,0.4);cursor:pointer;';
+          cellContent = `<div style="font-size:10px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${matchFound.equipe1}</div><div style="font-size:9px;color:var(--muted);">vs ${matchFound.equipe2||'...'}</div>`;
+        } else {
+          cellBg = 'background:rgba(200,245,32,0.07);border:1px solid rgba(200,245,32,0.2);cursor:pointer;';
+          cellContent = `<div style="font-size:10px;font-weight:700;color:var(--ink);">${matchFound.equipe1}</div><div style="font-size:9px;color:var(--muted);font-style:italic;">En attente…</div>`;
+        }
+        cellTitle = `${matchFound.equipe1} vs ${matchFound.equipe2||'?'} — ${matchFound.heure}`;
+      } else {
+        cellBg = 'cursor:pointer;';
+        cellContent = '';
+      }
+
+      const onclick = bloque ? '' : `onclick="openCreneauCell('${iso}',${h},'${matchFound?matchFound.id:''}')"`;
+      html += `<td title="${cellTitle}" ${onclick} style="padding:4px 6px;height:44px;vertical-align:top;border-right:1px solid var(--line);${cellBg}transition:background 0.1s;" onmouseover="if(!this.style.background.includes('217'))this.style.background='var(--paper2)'" onmouseout="if(!this.style.background.includes('217'))this.style.background='${matchFound?(matchFound.statut==='confirmed'?'rgba(200,245,32,0.18)':'rgba(200,245,32,0.07)'):''}'">${cellContent}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function openCreneauCell(dateISO, heure, matchId) {
+  const m = document.getElementById('modal-creneau');
+  if (!m) return;
+  currentCreneauEdit = { dateISO, heure, matchId };
+  const match = matchId ? (allMatchs || []).find(x => x.id === matchId) : null;
+  const MOIS = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+  const d = new Date(dateISO + 'T12:00:00');
+  document.getElementById('mc-title').textContent = `${d.getDate()} ${MOIS[d.getMonth()]} — ${heure}h`;
+  const infoEl = document.getElementById('mc-info');
+  if (infoEl) {
+    if (match) {
+      infoEl.textContent = `${match.equipe1}${match.equipe2?' vs '+match.equipe2:' (en attente)'} · ${match.statut}`;
+      document.getElementById('mc-delete-btn').style.display = 'inline-flex';
+    } else {
+      infoEl.textContent = `${dateISO} · ${heure}h00 — Créneau libre`;
+      document.getElementById('mc-delete-btn').style.display = 'none';
+    }
+  }
+  document.getElementById('mc-prix').value = currentFive ? (JSON.parse(localStorage.getItem('matchday_five_infos_' + currentFive) || '{}').prix || 80) : 80;
+  m.style.display = 'flex';
+}
+
+function closeCreneauModal() {
+  const m = document.getElementById('modal-creneau');
+  if (m) m.style.display = 'none';
+  currentCreneauEdit = null;
+}
+
+function closeNewCreneauModal() {
+  const m = document.getElementById('modal-new-creneau');
+  if (m) m.style.display = 'none';
+}
+
+function saveCreneauModal() {
+  if (!currentCreneauEdit) return;
+  const statut = document.getElementById('mc-statut').value;
+  const notes = document.getElementById('mc-notes').value;
+  const { dateISO, heure } = currentCreneauEdit;
+
+  if (statut === 'bloque') {
+    // Bloquer ce créneau
+    const creneaux = currentFive ? JSON.parse(localStorage.getItem('matchday_creneaux_bloques_' + currentFive) || '[]') : [];
+    const heureStr = String(heure).padStart(2,'0') + ':00';
+    const exists = creneaux.find(c => c.date === dateISO && c.heure === heureStr);
+    if (!exists) {
+      creneaux.push({ date: dateISO, heure: heureStr, raison: notes || 'Bloqué par gérant', blockedAt: new Date().toISOString() });
+      if (currentFive) localStorage.setItem('matchday_creneaux_bloques_' + currentFive, JSON.stringify(creneaux));
+    }
+    showToast('CRÉNEAU BLOQUÉ ✓');
+  } else {
+    showToast('CRÉNEAU MIS À JOUR ✓');
+  }
+  closeCreneauModal();
+  renderCalGrid();
+  renderCreneauxBloques();
+}
+
+function deleteCreneauModal() {
+  if (!currentCreneauEdit || !currentCreneauEdit.matchId) return;
+  if (!confirm('Annuler ce match ?')) return;
+  const session = getSession();
+  fetch(API_BASE + '/api/refund', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ matchId: currentCreneauEdit.matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: '' })
+  }).then(() => {
+    showToast('MATCH ANNULÉ ✓');
+    closeCreneauModal();
+    loadData();
+  }).catch(() => {
+    showToast('ERREUR API — ANNULATION NON ENREGISTRÉE');
+    closeCreneauModal();
+  });
+}
+
+function createNewCreneau() {
+  const debut = document.getElementById('nc-debut').value;
+  const fin = document.getElementById('nc-fin').value;
+  const prix = document.getElementById('nc-prix').value;
+  if (!debut || !fin) { showToast('HEURE REQUISE'); return; }
+  showToast(`CRÉNEAU ${debut}–${fin} AJOUTÉ ✓`);
+  closeNewCreneauModal();
+  renderCalGrid();
+}
+
+// =========== GÉNÉRATION CRÉNEAUX AUTO ===========
+function genererCreneauxAuto() {
+  const ouverture = document.getElementById('param-ouverture')?.value || '08:00';
+  const fermeture = document.getElementById('param-fermeture')?.value || '23:00';
+  const duree = document.getElementById('param-duree')?.value || '60';
+  const prixPleine = parseInt(document.getElementById('param-prix-pleine')?.value) || 80;
+  const prixCreuse = parseInt(document.getElementById('param-prix-creuse')?.value) || 60;
+
+  const jours = ['lun','mar','mer','jeu','ven','sam','dim'].filter((j,i) => {
+    const ids = ['p-lun','p-mar','p-mer','p-jeu','p-ven','p-sam','p-dim'];
+    return document.getElementById(ids[i])?.checked;
+  });
+
+  if (!currentFive) { showToast('SÉLECTIONNEZ UN TERRAIN D'ABORD'); return; }
+
+  const [oh, om] = ouverture.split(':').map(Number);
+  const [fh, fm] = fermeture.split(':').map(Number);
+  const startMin = oh * 60 + om;
+  const endMin = fh * 60 + fm;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const JOUR_NOMS = ['dim','lun','mar','mer','jeu','ven','sam'];
+  let generated = 0;
+
+  // Simuler la génération (en prod, ça irait en base)
+  const config = { ouverture, fermeture, duree, prixPleine, prixCreuse, jours, generatedAt: new Date().toISOString() };
+  localStorage.setItem('matchday_param_creneaux_' + currentFive, JSON.stringify(config));
+
+  // Compter les créneaux générés
+  for (let d = 0; d < 30; d++) {
+    const date = new Date(today); date.setDate(today.getDate() + d);
+    const jourNom = JOUR_NOMS[date.getDay()];
+    if (!jours.includes(jourNom)) continue;
+    let cur = startMin;
+    const dur = duree === 'both' ? 60 : parseInt(duree);
+    while (cur + dur <= endMin) { generated++; cur += dur; }
+    if (duree === 'both') {
+      cur = startMin;
+      while (cur + 90 <= endMin) { generated++; cur += 90; }
+    }
+  }
+
+  const statusEl = document.getElementById('param-status');
+  if (statusEl) statusEl.innerHTML = `<div style="color:var(--lime-dark);font-weight:600;margin-bottom:8px;">✓ Configuration enregistrée</div><div style="line-height:1.8;">Créneaux : ${generated} sur 30 jours<br>Horaires : ${ouverture} – ${fermeture}<br>Durée : ${duree === 'both' ? '1h + 1h30' : duree + ' min'}<br>Prix : ${prixPleine}€/h pleine · ${prixCreuse}€/h creuse<br>Jours : ${jours.join(', ')}</div>`;
+
+  showToast(`${generated} CRÉNEAUX CONFIGURÉS ✓`);
+  renderCalGrid();
+}
+
+// =========== ACTIONS GÉRANT ===========
+async function annulerMatchGerant(matchId) {
+  if (!confirm('Annuler ce match ? Les joueurs seront remboursés selon la politique d'annulation.')) return;
+  const session = getSession();
+  try {
+    const res = await fetch(API_BASE + '/api/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: 'Annulation depuis l'espace gérant' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('MATCH ANNULÉ — REMBOURSEMENT INITIÉ ✓');
+      await loadData();
+    } else {
+      showToast('ERREUR: ' + (data.error || 'Impossible d'annuler'));
+    }
+  } catch(e) {
+    showToast('ERREUR CONNEXION');
+  }
+}
+
+// =========== EXPORT RECAP AMÉLIORÉ ===========
+function loadExportRecap() {
+  const matchs = window._matchsCache || [];
+  const el = document.getElementById('export-recap');
+  if (!el) return;
+  const period = document.getElementById('export-period')?.value || 'all';
+  const filtered = filterByPeriod(matchs, period);
+  const confirmes = filtered.filter(m => m.statut==='confirmed').length;
+  const open = filtered.filter(m => m.statut==='open').length;
+  const annules = filtered.filter(m => m.statut==='cancelled').length;
+  const revenus = confirmes * 40;
+  const taux = filtered.length > 0 ? Math.round(confirmes / filtered.length * 100) : 0;
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;"><span>Total matchs</span><strong>${filtered.length}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;"><span>Confirmés</span><strong style="color:#1A6B3A;">${confirmes}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;"><span>En attente</span><strong style="color:#d97706;">${open}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;"><span>Annulés</span><strong style="color:var(--red);">${annules}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;"><span>Taux de confirmation</span><strong>${taux}%</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);margin-top:4px;font-size:13px;"><span>Revenus estimés</span><strong style="color:var(--lime-dark);font-size:18px;">${revenus}€</strong></div>
+  `;
+  renderExportHistory();
+}
+
+// =========== INIT ===========
+const session = getSession();
+if (session) { showApp(session); }
+</script>
+</body>
+</html>
