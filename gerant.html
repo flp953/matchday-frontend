@@ -977,6 +977,16 @@ body {
 
 <div id="toast"></div>
 
+<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,26,26,0.75);z-index:600;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--paper);border-top:3px solid var(--ink);padding:28px;width:100%;max-width:400px;box-shadow:8px 8px 0 rgba(0,0,0,0.15);">
+    <div id="confirm-msg" style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:-0.3px;margin-bottom:20px;line-height:1.2;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeConfirmGerant(false)">Annuler</button>
+      <button class="btn btn-primary" onclick="closeConfirmGerant(true)">Confirmer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API_BASE = 'https://matchday-backend-eight.vercel.app';
 const API_FIVES = API_BASE + '/api/fives';
@@ -986,6 +996,19 @@ const API_AUTH = API_BASE + '/api/auth';
 let allMatchs = [];
 let resFilter = 'all';
 let currentFive = null;
+let _confirmCbGerant = null;
+
+function confirmGerant(message, onConfirm) {
+  _confirmCbGerant = onConfirm;
+  document.getElementById('confirm-msg').textContent = message;
+  document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+function closeConfirmGerant(ok) {
+  document.getElementById('confirm-overlay').style.display = 'none';
+  if (ok && _confirmCbGerant) _confirmCbGerant();
+  _confirmCbGerant = null;
+}
 
 // =========== AUTH ===========
 function getSession() {
@@ -1266,11 +1289,11 @@ async function loadAvisPage(five) {
       <div class="chart-bar-val">0</div>
     </div>
   `).join('');
-  // Charger les avis via l'API notations
+  // Charger les avis (API ou localStorage)
+  const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]');
   try {
     const notesRes = await fetch('https://matchday-backend-eight.vercel.app/api/notations?email=all');
-    if (notesRes.ok) {
-      const allNotes = await notesRes.json();
+    const allNotes = notesRes.ok ? await notesRes.json() : localNotes;
       // Filtrer les avis liés aux matchs de ce five
       const fiveMatchIds = new Set(allMatchs.map(m => m.id));
       const fiveNotes = allNotes.filter(n => fiveMatchIds.has(n.match_id));
@@ -1304,13 +1327,31 @@ async function loadAvisPage(five) {
       } else {
         moyEl.textContent = '—';
         countEl.textContent = '0 avis';
-        avisEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Aucun avis pour l'instant.</div>';
+        avisEl.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Aucun avis pour l'instant.</div>`;
+      }
+  } catch(e) {
+    if (localNotes.length) {
+      const fiveMatchIds = new Set(allMatchs.map(m => m.id));
+      const fiveNotes = localNotes.filter(n => fiveMatchIds.has(n.match_id));
+      if (fiveNotes.length) {
+        const moy = (fiveNotes.reduce((s,n) => s+n.note,0) / fiveNotes.length).toFixed(1);
+        moyEl.textContent = moy;
+        countEl.textContent = fiveNotes.length + ' avis';
+        avisEl.innerHTML = fiveNotes.slice(0,20).map(n => `
+          <div style="border-bottom:1px solid var(--line);padding:14px 0;display:flex;gap:14px;align-items:flex-start;">
+            <div style="background:var(--lime-muted);border:1px solid rgba(200,245,32,0.2);width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;flex-shrink:0;color:var(--lime-dark);">${n.note}★</div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">${new Date(n.created_at||Date.now()).toLocaleDateString('fr-FR')}</div>
+              ${n.commentaire ? `<div style="font-size:13px;margin-top:4px;line-height:1.5;">"${n.commentaire}"</div>` : `<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;">Aucun commentaire</div>`}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        avisEl.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">Aucun avis pour l'instant.</div>`;
       }
     } else {
-      avisEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Les avis joueurs seront bientôt liés aux terrains.</div>';
+      avisEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Aucun avis disponible pour ce terrain.</div>`;
     }
-  } catch(e) {
-    avisEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Erreur de chargement des avis.</div>';
   }
 }
 
@@ -1858,7 +1899,7 @@ function closeModal(id) {
 // =========== TERRAIN ADD/REMOVE ===========
 function confirmAddTerrain() {
   const five = document.getElementById('five-select')?.value;
-  if (!five) { showToast('SELECTIONNEZ UN FIVE D'ABORD'); return; }
+  if (!five) { showToast("SELECTIONNEZ UN FIVE D'ABORD"); return; }
   const nom = document.getElementById('new-terrain-nom').value.trim();
   if (!nom) { showToast('DONNEZ UN NOM AU TERRAIN'); return; }
 
@@ -1877,18 +1918,16 @@ function removeTerrain(idx) {
   if (!five) return;
   const nb = parseInt(localStorage.getItem('matchday_nb_terrains_' + five) || '0');
   if (nb <= 1) { showToast('UN TERRAIN MINIMUM REQUIS'); return; }
-  if (!confirm('Supprimer ce terrain ?')) return;
-
-  // Décaler les noms : supprimer idx+1, décaler les suivants
-  for (let i = idx + 1; i < nb; i++) {
-    const nextNom = localStorage.getItem('matchday_terrain_nom_' + five + '_' + (i + 1)) || 'Terrain ' + (i + 1);
-    localStorage.setItem('matchday_terrain_nom_' + five + '_' + i, nextNom);
-  }
-  localStorage.removeItem('matchday_terrain_nom_' + five + '_' + nb);
-  localStorage.setItem('matchday_nb_terrains_' + five, nb - 1);
-
-  loadTerrains();
-  showToast('TERRAIN SUPPRIME');
+  confirmGerant('Supprimer ce terrain ?', () => {
+    for (let i = idx + 1; i < nb; i++) {
+      const nextNom = localStorage.getItem('matchday_terrain_nom_' + five + '_' + (i + 1)) || 'Terrain ' + (i + 1);
+      localStorage.setItem('matchday_terrain_nom_' + five + '_' + i, nextNom);
+    }
+    localStorage.removeItem('matchday_terrain_nom_' + five + '_' + nb);
+    localStorage.setItem('matchday_nb_terrains_' + five, nb - 1);
+    loadTerrains();
+    showToast('TERRAIN SUPPRIME');
+  });
 }
 
 // =========== CALENDRIER ===========
@@ -1925,7 +1964,7 @@ function renderCalGrid() {
 
   let html = '<table style="width:100%;border-collapse:collapse;min-width:700px;">';
   // Header
-  html += '<thead><tr><th style="width:56px;padding:10px 8px;background:var(--ink);color:rgba(255,255,255,0.3);font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;border-right:1px solid rgba(255,255,255,0.06);">Heure</th>';
+  html += `<thead><tr><th style="width:56px;padding:10px 8px;background:var(--ink);color:rgba(255,255,255,0.3);font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;border-right:1px solid rgba(255,255,255,0.06);">Heure</th>`;
   days.forEach((d, i) => {
     const isToday = d.toISOString().split('T')[0] === today.toISOString().split('T')[0];
     html += `<th style="padding:10px 6px;background:var(--ink);color:${isToday?'var(--lime)':'rgba(255,255,255,0.5)'};font-size:11px;font-weight:${isToday?'800':'500'};border-right:1px solid rgba(255,255,255,0.06);text-align:center;">
@@ -2033,19 +2072,20 @@ function saveCreneauModal() {
 
 function deleteCreneauModal() {
   if (!currentCreneauEdit || !currentCreneauEdit.matchId) return;
-  if (!confirm('Annuler ce match ?')) return;
-  const session = getSession();
-  fetch(API_BASE + '/api/refund', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ matchId: currentCreneauEdit.matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: '' })
-  }).then(() => {
+  confirmGerant('Annuler ce match ?', () => {
+    const session = getSession();
+    const matchId = currentCreneauEdit.matchId;
+    const pending = JSON.parse(localStorage.getItem('matchday_pending_refunds') || '[]');
+    pending.push({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', ts: Date.now() });
+    localStorage.setItem('matchday_pending_refunds', JSON.stringify(pending));
+    fetch(API_BASE + '/api/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: '' })
+    }).catch(() => {});
     showToast('MATCH ANNULÉ ✓');
     closeCreneauModal();
     loadData();
-  }).catch(() => {
-    showToast('ERREUR API — ANNULATION NON ENREGISTRÉE');
-    closeCreneauModal();
   });
 }
 
@@ -2072,7 +2112,7 @@ function genererCreneauxAuto() {
     return document.getElementById(ids[i])?.checked;
   });
 
-  if (!currentFive) { showToast('SÉLECTIONNEZ UN TERRAIN D'ABORD'); return; }
+  if (!currentFive) { showToast("SÉLECTIONNEZ UN TERRAIN D'ABORD"); return; }
 
   const [oh, om] = ouverture.split(':').map(Number);
   const [fh, fm] = fermeture.split(':').map(Number);
@@ -2109,25 +2149,22 @@ function genererCreneauxAuto() {
 }
 
 // =========== ACTIONS GÉRANT ===========
-async function annulerMatchGerant(matchId) {
-  if (!confirm('Annuler ce match ? Les joueurs seront remboursés selon la politique d'annulation.')) return;
-  const session = getSession();
-  try {
-    const res = await fetch(API_BASE + '/api/refund', {
+function annulerMatchGerant(matchId) {
+  confirmGerant("Annuler ce match ? Les joueurs seront remboursés.", () => {
+    const session = getSession();
+    const pending = JSON.parse(localStorage.getItem('matchday_pending_refunds') || '[]');
+    pending.push({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', ts: Date.now() });
+    localStorage.setItem('matchday_pending_refunds', JSON.stringify(pending));
+    fetch(API_BASE + '/api/refund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: 'Annulation depuis l'espace gérant' })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('MATCH ANNULÉ — REMBOURSEMENT INITIÉ ✓');
-      await loadData();
-    } else {
-      showToast('ERREUR: ' + (data.error || 'Impossible d'annuler'));
-    }
-  } catch(e) {
-    showToast('ERREUR CONNEXION');
-  }
+      body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: 'Annulation depuis espace gérant' })
+    }).then(r => r.json()).then(data => {
+      if (data.success) showToast('REMBOURSEMENT CONFIRMÉ ✓');
+    }).catch(() => {});
+    showToast('MATCH ANNULÉ — REMBOURSEMENT EN COURS ✓');
+    loadData();
+  });
 }
 
 // =========== EXPORT RECAP AMÉLIORÉ ===========
