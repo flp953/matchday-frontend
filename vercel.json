@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/app", "destination": "/matchday-app-v3.html" },
+    { "source": "/reset", "destination": "/reset.html" },
+    { "source": "/gerant", "destination": "/gerant.html" }
+  ]
+}

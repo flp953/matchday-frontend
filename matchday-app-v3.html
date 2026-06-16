@@ -3402,7 +3402,7 @@ function agShowApp(session) {
   // Pseudo
   const pseudo = session.pseudo || session.email.split('@')[0];
   document.getElementById('profil-pseudo').textContent = pseudo;
-  document.getElementById('profil-share-url').textContent = `matchday-alpha.vercel.app/app?joueur=${encodeURIComponent(session.email)}`;
+  document.getElementById('profil-share-url').textContent = `${window.location.origin}/app?joueur=${encodeURIComponent(session.email)}`;
 
   // Aller direct sur le dashboard
   showPage('dashboard', document.getElementById('nav-dashboard'));
