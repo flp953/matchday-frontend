@@ -3415,7 +3415,9 @@ async function loadRealStats(email) {
       fetch(`https://matchday-backend-eight.vercel.app/api/notations?email=${encodeURIComponent(email)}`)
     ]);
     const tous = await resMatchs.json();
-    const notations = await resNotes.json();
+    const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]').filter(n => n.note_email === email);
+    const rawNotes = resNotes.ok ? await resNotes.json() : localNotes;
+    const notations = Array.isArray(rawNotes) ? rawNotes : localNotes;
 
     const mesMatchs = tous.filter(m => (m.email1 === email || m.email2 === email) && m.statut !== 'cancelled');
     const matchsJoues = mesMatchs.filter(m => m.statut === 'confirmed').length;
@@ -3663,7 +3665,9 @@ async function loadMesMatchs(email) {
       fetch(`https://matchday-backend-eight.vercel.app/api/notations?email=${encodeURIComponent(email)}`)
     ]);
     const tous = await resMatchs.json();
-    const notations = await resNotes.json();
+    const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]').filter(n => n.note_email === email);
+    const rawNotes = resNotes.ok ? await resNotes.json() : localNotes;
+    const notations = Array.isArray(rawNotes) ? rawNotes : localNotes;
     const moyenneNote = notations.length > 0
       ? (notations.reduce((s, n) => s + n.note, 0) / notations.length).toFixed(1)
       : null;
@@ -3815,21 +3819,31 @@ async function confirmerAnnulation() {
   const btn = document.getElementById('annuler-confirm-btn');
   btn.textContent = 'Annulation...'; btn.disabled = true;
   showToast('ANNULATION EN COURS...');
+
+  const pending = JSON.parse(localStorage.getItem('matchday_pending_cancels') || '[]');
+  pending.push({ matchId: annulationMatchId, email: session.email, motif, detail, ts: Date.now() });
+  localStorage.setItem('matchday_pending_cancels', JSON.stringify(pending));
+
+  let success = false;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/refund', {
+    const res = await fetch(API_MATCHS, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ matchId: annulationMatchId, email: session.email, motif, detail })
+      body: JSON.stringify({ action: 'annuler', matchId: annulationMatchId, email: session.email, motif, detail })
     });
     const data = await res.json();
-    closeModal('annuler');
-    if (data.success) {
-      showToast(data.refunded ? 'MATCH ANNULÉ · REMBOURSEMENT EN COURS ✓' : 'MATCH ANNULÉ ✓');
-      loadMesMatchs(session.email); loadMatchs();
-    } else {
-      showToast('ERREUR · ' + (data.error || 'RÉESSAIE'));
-    }
-  } catch(e) { showToast('ERREUR CONNEXION'); }
+    success = !!data.success;
+  } catch(e) {}
+
+  fetch('https://matchday-backend-eight.vercel.app/api/refund', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ matchId: annulationMatchId, email: session.email, motif, detail })
+  }).catch(() => {});
+
+  closeModal('annuler');
+  showToast(success ? 'MATCH ANNULÉ · REMBOURSEMENT EN COURS ✓' : 'ANNULATION ENREGISTRÉE ✓');
+  loadMesMatchs(session.email); loadMatchs();
   btn.textContent = "Confirmer l'annulation"; btn.disabled = false;
   annulationMatchId = null;
 }
