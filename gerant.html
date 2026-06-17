@@ -1467,6 +1467,12 @@ function showPage(id, el) {
   document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
   const bnTarget = document.getElementById('bn-' + id);
   if (bnTarget) bnTarget.classList.add('active');
+  // lazy loads
+  if (id === 'reservations' && typeof renderCalGrid === 'function') { renderCalGrid(); renderResTable(); }
+  if (id === 'terrains' && typeof loadTerrains === 'function') loadTerrains();
+  if (id === 'alertes' && typeof initAlertes === 'function') { initAlertes(); renderAlertes(); }
+  if (id === 'blacklist' && typeof loadBlacklist === 'function') loadBlacklist();
+  if (id === 'exports' && typeof loadExportRecap === 'function') loadExportRecap();
 }
 
 function showToast(msg) {
@@ -1790,16 +1796,6 @@ function loadExportRecap() {
   renderExportHistory();
 }
 
-// Hook into showPage for new pages
-const _origShowPageGerant = showPage;
-function showPage(id, el) {
-  _origShowPageGerant(id, el);
-  if (id === 'reservations') { renderCalGrid(); renderResTable(); }
-  if (id === 'terrains') { loadTerrains(); }
-  if (id === 'alertes') { initAlertes(); renderAlertes(); }
-  if (id === 'blacklist') { loadBlacklist(); }
-  if (id === 'exports') { loadExportRecap(); }
-}
 
 // =========== SUPABASE REALTIME ===========
 function initRealtime() {

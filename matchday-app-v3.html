@@ -3253,11 +3253,12 @@ function showPage(id, el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el) el.classList.add('active');
-  // Lazy loads
   if (id === 'scores' && typeof loadScores === 'function') loadScores();
   if (id === 'classement' && typeof loadClassement === 'function') loadClassement();
   if (id === 'paiements' && typeof loadPaiements === 'function') loadPaiements();
   if (id === 'chat' && typeof loadChatConversations === 'function') loadChatConversations();
+  if (id === 'aide' && typeof renderFAQ === 'function') renderFAQ();
+  if (id === 'notifs' && typeof loadNotifications === 'function') loadNotifications();
 }
 
 function swTab(btn, tabId) {
@@ -4685,13 +4686,6 @@ function emptyState(icon, title, sub, btnLabel, btnAction) {
   </div>`;
 }
 
-// =========== SHOWPAGE ENRICHI ===========
-const _origShowPage = showPage;
-function showPage(id, el) {
-  _origShowPage(id, el);
-  if (id === 'aide') renderFAQ();
-  if (id === 'notifs') loadNotifications();
-}
 
 async function loadNotifications() {
   const session = getSession();
