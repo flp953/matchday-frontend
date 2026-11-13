@@ -698,6 +698,9 @@ footer {
   footer { flex-direction: column; gap: 16px; padding: 28px; text-align: center; }
 }
 </style>
+<!-- Vercel Web Analytics (à activer dans le dashboard Vercel > Analytics) -->
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -1119,8 +1122,8 @@ footer {
   <div class="footer-links">
     <a href="#comment">Comment ça marche</a>
     <a href="#gerants">Gérants</a>
-    <a href="#">CGU</a>
-    <a href="mailto:hello@matchday.fr">Contact</a>
+    <a href="/cgu">CGU</a>
+    <a href="/contact">Contact</a>
   </div>
   <div class="footer-copy">© 2026 Matchday</div>
 </footer>
@@ -1216,6 +1219,27 @@ footer {
 
 
 <script>
+// =========== API ===========
+// Seul endroit où l'URL du backend est écrite.
+const API_BASE = 'https://matchday-backend-eight.vercel.app';
+const SESSION_KEY = 'matchday_session';
+// Anciennes sessions sans token : on force une reconnexion
+try { const _s = JSON.parse(localStorage.getItem(SESSION_KEY)); if (_s && !_s.token) localStorage.removeItem(SESSION_KEY); } catch (e) {}
+function apiFetch(path, opts) {
+  opts = opts || {};
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) {}
+  const headers = Object.assign({}, opts.headers || {});
+  if (s && s.token) headers['Authorization'] = 'Bearer ' + s.token;
+  return fetch(API_BASE + path, Object.assign({}, opts, { headers })).then(res => {
+    // Token expiré ou invalide : on déconnecte proprement
+    if (res.status === 401 && s && !path.startsWith('/api/auth') && !path.startsWith('/api/reset')) {
+      localStorage.removeItem(SESSION_KEY);
+      location.reload();
+    }
+    return res;
+  });
+}
 // scroll reveal
 const reveals = document.querySelectorAll('.reveal');
 const obs = new IntersectionObserver(entries => {
@@ -1268,7 +1292,7 @@ async function handleOubli() {
   const btn = document.getElementById('oubliBtn');
   btn.textContent = 'Envoi en cours...'; btn.disabled = true;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/reset', {
+    const res = await apiFetch('/api/reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -1298,7 +1322,6 @@ function showError(id, msg) {
   el.classList.add('show');
 }
 
-const API_URL = 'https://matchday-backend-eight.vercel.app/api/auth';
 
 // ---- SESSION ----
 function getSession() {
@@ -1333,7 +1356,7 @@ async function handleRegister() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(API_URL, {
+    const res = await apiFetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'register', email, password, phone, role: 'joueur' })
@@ -1366,7 +1389,7 @@ async function handleLogin() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(API_URL, {
+    const res = await apiFetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password, role: 'joueur' })

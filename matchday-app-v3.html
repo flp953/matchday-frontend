@@ -1192,6 +1192,9 @@ body {
 .cc-prix { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; }
 
 </style>
+<!-- Vercel Web Analytics (à activer dans le dashboard Vercel > Analytics) -->
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <!-- ===================== AUTH GATE ===================== -->
@@ -2369,8 +2372,27 @@ body {
 
 <script>
 // =========== DATA ===========
-const API_MATCHS = 'https://matchday-backend-eight.vercel.app/api/matchs';
-const API_FIVES = 'https://matchday-backend-eight.vercel.app/api/fives';
+// =========== API ===========
+// Seul endroit où l'URL du backend est écrite.
+const API_BASE = 'https://matchday-backend-eight.vercel.app';
+const SESSION_KEY = 'matchday_session';
+// Anciennes sessions sans token : on force une reconnexion
+try { const _s = JSON.parse(localStorage.getItem(SESSION_KEY)); if (_s && !_s.token) localStorage.removeItem(SESSION_KEY); } catch (e) {}
+function apiFetch(path, opts) {
+  opts = opts || {};
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) {}
+  const headers = Object.assign({}, opts.headers || {});
+  if (s && s.token) headers['Authorization'] = 'Bearer ' + s.token;
+  return fetch(API_BASE + path, Object.assign({}, opts, { headers })).then(res => {
+    // Token expiré ou invalide : on déconnecte proprement
+    if (res.status === 401 && s && !path.startsWith('/api/auth') && !path.startsWith('/api/reset')) {
+      localStorage.removeItem(SESSION_KEY);
+      location.reload();
+    }
+    return res;
+  });
+}
 let liveMatchData = [];
 let fivesData = [];
 let userLat = null, userLng = null;
@@ -2422,9 +2444,9 @@ async function loadFives() {
 async function fetchAndRenderFives(lat, lng) {
   const c = document.getElementById('five-list-render');
   try {
-    let url = API_FIVES;
+    let url = '/api/fives';
     if (lat && lng) url += `?lat=${lat}&lng=${lng}`;
-    const res = await fetch(url);
+    const res = await apiFetch(url);
     fivesData = await res.json();
 
     // Convertir format Supabase vers format attendu
@@ -2472,7 +2494,7 @@ async function fetchAndRenderFives(lat, lng) {
 // Récupère les matchs d'un five et génère les créneaux dispo sur 7 jours
 async function fetchCreneauxFive(fiveNom) {
   try {
-    const res = await fetch(`https://matchday-backend-eight.vercel.app/api/gerant?five=${encodeURIComponent(fiveNom)}`);
+    const res = await apiFetch(`/api/gerant?five=${encodeURIComponent(fiveNom)}`);
     const data = await res.json();
     const matchs = (data.matchs || []).filter(m => m.statut !== 'cancelled');
 
@@ -2622,7 +2644,7 @@ async function loadMatchs() {
   const c = document.getElementById('match-rows-container');
   c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Chargement des matchs...</div>';
   try {
-    const res = await fetch(API_MATCHS);
+    const res = await apiFetch('/api/matchs');
     // On n'affiche que les matchs OPEN (pas confirmés, pas annulés)
     // ET dont la date/heure n'est pas encore passée (marge 30 min)
     const _now = new Date();
@@ -3043,7 +3065,7 @@ function envoyerMessage() {
     msgsEl.scrollTop = msgsEl.scrollHeight;
   }
   localStorage.setItem('matchday_chat_' + currentChatMatchId, JSON.stringify(chatMessages[currentChatMatchId]));
-  fetch('https://matchday-backend-eight.vercel.app/api/matchs', {
+  apiFetch('/api/matchs', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ action: 'chat', matchId: currentChatMatchId, from: session.email, text, time: msg.time })
   }).catch(() => {});
@@ -3081,7 +3103,7 @@ async function confirmCreer() {
 
   try {
     // 1. Créer le match dans Supabase
-    const res = await fetch(API_MATCHS, {
+    const res = await apiFetch('/api/matchs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3106,7 +3128,7 @@ async function confirmCreer() {
       localStorage.setItem('matchday_pending_match', matchId || '');
 
       // 2. Rediriger vers Stripe pour le paiement de l'équipe 1
-      const stripeRes = await fetch('https://matchday-backend-eight.vercel.app/api/checkout', {
+      const stripeRes = await apiFetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3216,7 +3238,7 @@ async function confirmJoin() {
     localStorage.setItem('matchday_pending_email2', session.email);
 
     // Rediriger vers Stripe (la confirmation match se fait via webhook Stripe côté serveur)
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/checkout', {
+    const res = await apiFetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3271,7 +3293,6 @@ function swTab(btn, tabId) {
 
 
 // =========== AUTH GATE ===========
-const API_URL = 'https://matchday-backend-eight.vercel.app/api/auth';
 let agLoginRole = 'joueur';
 let agRegRole = 'joueur';
 
@@ -3317,7 +3338,7 @@ async function agInit() {
     const email2 = localStorage.getItem('matchday_pending_email2') || '';
     if (matchId && sessionId) {
       try {
-        const payRes = await fetch('https://matchday-backend-eight.vercel.app/api/matchs', {
+        const payRes = await apiFetch('/api/matchs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'savePayment', matchId, sessionId, equipe2, email2 })
@@ -3332,7 +3353,7 @@ async function agInit() {
         ]);
         // Chercher le match pour afficher la page de confirmation
         try {
-          const allRes = await fetch('https://matchday-backend-eight.vercel.app/api/matchs');
+          const allRes = await apiFetch('/api/matchs');
           const allData = await allRes.json();
           const myMatch = allData.find(m => m.id === matchId);
           if (myMatch) {
@@ -3412,13 +3433,12 @@ function agShowApp(session) {
 async function loadRealStats(email) {
   try {
     const [resMatchs, resNotes] = await Promise.all([
-      fetch(API_MATCHS),
-      fetch(`https://matchday-backend-eight.vercel.app/api/notations?email=${encodeURIComponent(email)}`)
+      apiFetch('/api/matchs'),
+      apiFetch(`/api/notations?email=${encodeURIComponent(email)}`)
     ]);
     const tous = await resMatchs.json();
-    const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]').filter(n => n.note_email === email);
-    const rawNotes = resNotes.ok ? await resNotes.json() : localNotes;
-    const notations = Array.isArray(rawNotes) ? rawNotes : localNotes;
+    const rawNotes = resNotes.ok ? await resNotes.json() : [];
+    const notations = Array.isArray(rawNotes) ? rawNotes : [];
 
     const mesMatchs = tous.filter(m => (m.email1 === email || m.email2 === email) && m.statut !== 'cancelled');
     const matchsJoues = mesMatchs.filter(m => m.statut === 'confirmed').length;
@@ -3551,7 +3571,7 @@ async function agHandleOubli() {
   btn.textContent = 'Envoi en cours...';
   btn.disabled = true;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/reset', {
+    const res = await apiFetch('/api/reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -3602,7 +3622,7 @@ async function agHandleLogin() {
   btn.textContent = 'Connexion...'; btn.disabled = true;
 
   try {
-    const res = await fetch(API_URL, {
+    const res = await apiFetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password, role: agLoginRole })
@@ -3635,7 +3655,7 @@ async function agHandleRegister() {
   btn.textContent = 'Création...'; btn.disabled = true;
 
   try {
-    const res = await fetch(API_URL, {
+    const res = await apiFetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'register', email, password, phone, role: agRegRole })
@@ -3662,13 +3682,12 @@ async function loadMesMatchs(email) {
 
   try {
     const [resMatchs, resNotes] = await Promise.all([
-      fetch(API_MATCHS),
-      fetch(`https://matchday-backend-eight.vercel.app/api/notations?email=${encodeURIComponent(email)}`)
+      apiFetch('/api/matchs'),
+      apiFetch(`/api/notations?email=${encodeURIComponent(email)}`)
     ]);
     const tous = await resMatchs.json();
-    const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]').filter(n => n.note_email === email);
-    const rawNotes = resNotes.ok ? await resNotes.json() : localNotes;
-    const notations = Array.isArray(rawNotes) ? rawNotes : localNotes;
+    const rawNotes = resNotes.ok ? await resNotes.json() : [];
+    const notations = Array.isArray(rawNotes) ? rawNotes : [];
     const moyenneNote = notations.length > 0
       ? (notations.reduce((s, n) => s + n.note, 0) / notations.length).toFixed(1)
       : null;
@@ -3827,7 +3846,7 @@ async function confirmerAnnulation() {
 
   let success = false;
   try {
-    const res = await fetch(API_MATCHS, {
+    const res = await apiFetch('/api/matchs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'annuler', matchId: annulationMatchId, email: session.email, motif, detail })
@@ -3836,7 +3855,7 @@ async function confirmerAnnulation() {
     success = !!data.success;
   } catch(e) {}
 
-  fetch('https://matchday-backend-eight.vercel.app/api/refund', {
+  apiFetch('/api/refund', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ matchId: annulationMatchId, email: session.email, motif, detail })
@@ -3859,7 +3878,7 @@ async function agHandleReset() {
   const btn = document.getElementById('agResetBtn');
   btn.textContent = 'Changement en cours...'; btn.disabled = true;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/reset', {
+    const res = await apiFetch('/api/reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password })
@@ -3935,11 +3954,11 @@ function updateBadges(matchsJoues, moyenneNote) {
 async function loadClassement() {
   try {
     const [resMatchs, resNotes] = await Promise.all([
-      fetch(API_MATCHS),
-      fetch('https://matchday-backend-eight.vercel.app/api/notations?email=all')
+      apiFetch('/api/matchs'),
+      apiFetch('/api/notations?email=all')
     ]);
     const matchs = await resMatchs.json();
-    const notes = resNotes.ok ? await resNotes.json() : JSON.parse(localStorage.getItem('matchday_notes') || '[]');
+    const notes = resNotes.ok ? await resNotes.json() : [];
 
     // Calculer stats par joueur
     const joueurs = {};
@@ -4008,7 +4027,7 @@ async function envoyerInvitationEmail() {
   if (!email) { showToast('ENTRE UN EMAIL'); return; }
   const session = getSession();
   try {
-    await fetch('https://matchday-backend-eight.vercel.app/api/matchs', {
+    await apiFetch('/api/matchs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'inviter', matchId: partagerMatchId, emailInvite: email, inviteur: session.pseudo || session.email.split('@')[0] })
@@ -4036,7 +4055,7 @@ async function confirmerModification() {
   const niveau = document.getElementById('modifier-niveau').value;
   if (!equipe) { showToast('ENTRE UN NOM D\'ÉQUIPE'); return; }
   try {
-    const res = await fetch(API_MATCHS, {
+    const res = await apiFetch('/api/matchs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'modifier', matchId: modifierMatchId, equipe1: equipe, niveau })
@@ -4056,6 +4075,10 @@ async function confirmerModification() {
 }
 
 // =========== AVIS PROFIL ===========
+function escHtml(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function _renderNotes(container, notes) {
   if (!notes || !notes.length) {
     container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Aucun avis reçu pour l\'instant.</div>';
@@ -4067,7 +4090,7 @@ function _renderNotes(container, notes) {
         <span style="color:var(--lime);font-size:16px;">${'★'.repeat(n.note)}${'☆'.repeat(5-n.note)}</span>
         <span style="font-size:10px;color:var(--muted);margin-left:auto;">${new Date(n.created_at||Date.now()).toLocaleDateString('fr-FR')}</span>
       </div>
-      ${n.commentaire ? `<div style="font-size:13px;color:rgba(0,0,0,0.6);font-style:italic;">"${n.commentaire}"</div>` : ''}
+      ${n.commentaire ? `<div style="font-size:13px;color:rgba(0,0,0,0.6);font-style:italic;">"${escHtml(n.commentaire)}"</div>` : ''}
     </div>
   `).join('');
 }
@@ -4075,13 +4098,12 @@ function _renderNotes(container, notes) {
 async function loadAvisProfil(email) {
   const container = document.getElementById('avis-container');
   if (!container) return;
-  const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]').filter(n => n.note_email === email);
   try {
-    const res = await fetch(`https://matchday-backend-eight.vercel.app/api/notations?email=${encodeURIComponent(email)}`);
-    const notes = res.ok ? await res.json() : localNotes;
-    _renderNotes(container, notes.length ? notes : localNotes);
+    const res = await apiFetch(`/api/notations?email=${encodeURIComponent(email)}`);
+    const notes = res.ok ? await res.json() : [];
+    _renderNotes(container, Array.isArray(notes) ? notes : []);
   } catch(e) {
-    _renderNotes(container, localNotes);
+    _renderNotes(container, []);
   }
 }
 
@@ -4110,27 +4132,23 @@ async function confirmerNotation() {
 
   const noteData = {
     match_id: notationCurrent.matchId,
-    noteur_email: session.email,
     note_email: notationCurrent.noteEmail,
     note: notationCurrent.note,
-    commentaire: document.getElementById('noter-commentaire').value,
-    created_at: new Date().toISOString()
+    commentaire: document.getElementById('noter-commentaire').value.trim().slice(0, 500)
   };
 
-  // Sauvegarde localStorage (immédiate, toujours fiable)
-  const saved = JSON.parse(localStorage.getItem('matchday_notes') || '[]');
-  const idx = saved.findIndex(n => n.match_id === noteData.match_id && n.noteur_email === noteData.noteur_email);
-  if (idx >= 0) saved[idx] = noteData; else saved.push(noteData);
-  localStorage.setItem('matchday_notes', JSON.stringify(saved));
-
-  // Tentative API (silencieuse si backend absent)
   try {
-    await fetch('https://matchday-backend-eight.vercel.app/api/notations', {
+    const res = await apiFetch('/api/notations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(noteData)
     });
-  } catch(e) {}
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showToast((data.error || 'ERREUR, RÉESSAIE').toUpperCase()); return; }
+  } catch(e) {
+    showToast('PAS DE CONNEXION, RÉESSAIE');
+    return;
+  }
 
   closeModal('noter');
   showToast('⭐ NOTE ENVOYÉE · MERCI !');
@@ -4249,7 +4267,7 @@ async function loadChatConversations() {
   const session = getSession();
   if (!session) return;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/matchs');
+    const res = await apiFetch('/api/matchs');
     const tous = await res.json();
     const mes = tous.filter(m => (m.email1 === session.email || m.email2 === session.email) && m.statut === 'confirmed');
     window._mesMatchsCache = tous.filter(m => m.email1 === session.email || m.email2 === session.email);
@@ -4289,7 +4307,7 @@ function openChatWindow(matchId, terrain) {
 
 async function fetchChatMessages(matchId, myEmail) {
   try {
-    const res = await fetch(`https://matchday-backend-eight.vercel.app/api/matchs?chat=${matchId}`);
+    const res = await apiFetch(`/api/matchs?chat=${matchId}`);
     if (res.ok) {
       const data = await res.json();
       if (data.messages && data.messages.length) {
@@ -4344,7 +4362,7 @@ async function sendChatMessage() {
   // Persister côté API + localStorage fallback
   localStorage.setItem('matchday_chat_' + currentChatMatchId, JSON.stringify(chatMessages[currentChatMatchId]));
   try {
-    await fetch('https://matchday-backend-eight.vercel.app/api/matchs', {
+    await apiFetch('/api/matchs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'chat', matchId: currentChatMatchId, from: session.email, text, time: msg.time })
@@ -4423,7 +4441,7 @@ async function confirmerScore() {
   localStorage.setItem('matchday_scores', JSON.stringify(scores));
   // Try to save to API
   try {
-    await fetch('https://matchday-backend-eight.vercel.app/api/matchs', {
+    await apiFetch('/api/matchs', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ action: 'score', matchId: scoreMatchId, score1: s1, score2: s2 })
     });
@@ -4440,7 +4458,7 @@ async function loadScores() {
   const histEl = document.getElementById('scores-history');
   if (!scoresEl) return;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/matchs');
+    const res = await apiFetch('/api/matchs');
     const tous = await res.json();
     window._mesMatchsCache = tous.filter(m => m.email1 === session.email || m.email2 === session.email);
     const saved = JSON.parse(localStorage.getItem('matchday_scores') || '{}');
@@ -4484,7 +4502,7 @@ async function loadPaiements() {
   const el = document.getElementById('pay-list');
   if (!el) return;
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/matchs');
+    const res = await apiFetch('/api/matchs');
     const tous = await res.json();
     const mes = tous.filter(m => m.email1 === session.email || m.email2 === session.email);
     let total = 0, refunds = 0;
@@ -4540,7 +4558,7 @@ function startMatchPolling() {
   if (window._matchPollInterval) clearInterval(window._matchPollInterval);
   window._matchPollInterval = setInterval(async () => {
     try {
-      const res = await fetch('https://matchday-backend-eight.vercel.app/api/matchs');
+      const res = await apiFetch('/api/matchs');
       const _today = new Date(); _today.setHours(0,0,0,0);
       const fresh = (await res.json()).filter(m => {
         if (m.statut !== 'open') return false;
@@ -4582,7 +4600,7 @@ function obSavePseudo() {
     document.getElementById('profil-pseudo').textContent = pseudo;
     document.getElementById('sfName').textContent = pseudo;
     // Sauvegarder en base
-    fetch('https://matchday-backend-eight.vercel.app/api/auth', {
+    apiFetch('/api/auth', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ action: 'updatePseudo', email: session.email, pseudo })
@@ -4694,7 +4712,7 @@ async function loadNotifications() {
   if (!container) return;
   
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/matchs');
+    const res = await apiFetch('/api/matchs');
     const tous = await res.json();
     const mes = tous.filter(m => m.email1 === session.email || m.email2 === session.email);
     

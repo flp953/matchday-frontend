@@ -318,6 +318,9 @@ body {
   .page-title { font-size: 30px; }
 }
 </style>
+<!-- Vercel Web Analytics (à activer dans le dashboard Vercel > Analytics) -->
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -988,10 +991,30 @@ body {
 </div>
 
 <script>
+// =========== API ===========
+// Seul endroit où l'URL du backend est écrite.
 const API_BASE = 'https://matchday-backend-eight.vercel.app';
-const API_FIVES = API_BASE + '/api/fives';
-const API_GERANT = API_BASE + '/api/gerant';
-const API_AUTH = API_BASE + '/api/auth';
+const SESSION_KEY = 'matchday_gerant_session';
+// Anciennes sessions sans token : on force une reconnexion
+try { const _s = JSON.parse(localStorage.getItem(SESSION_KEY)); if (_s && !_s.token) localStorage.removeItem(SESSION_KEY); } catch (e) {}
+function escHtml(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function apiFetch(path, opts) {
+  opts = opts || {};
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) {}
+  const headers = Object.assign({}, opts.headers || {});
+  if (s && s.token) headers['Authorization'] = 'Bearer ' + s.token;
+  return fetch(API_BASE + path, Object.assign({}, opts, { headers })).then(res => {
+    // Token expiré ou invalide : on déconnecte proprement
+    if (res.status === 401 && s && !path.startsWith('/api/auth') && !path.startsWith('/api/reset')) {
+      localStorage.removeItem(SESSION_KEY);
+      location.reload();
+    }
+    return res;
+  });
+}
 
 let allMatchs = [];
 let resFilter = 'all';
@@ -1028,7 +1051,7 @@ async function doLogin() {
   if (!email || !password) { errEl.textContent = 'Remplis tous les champs.'; errEl.style.display = 'block'; return; }
 
   try {
-    const res = await fetch(API_AUTH, {
+    const res = await apiFetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password, role: 'gerant' })
@@ -1059,7 +1082,7 @@ async function showApp(session) {
   document.getElementById('sfAvatar').textContent = session.email.substring(0,2).toUpperCase();
 
   // Charger les fives
-  const res = await fetch(API_FIVES);
+  const res = await apiFetch('/api/fives');
   const fives = await res.json();
   const select = document.getElementById('five-select');
 
@@ -1097,7 +1120,7 @@ async function loadData() {
   currentFive = five;
   document.getElementById('five-nom-label').textContent = five;
 
-  const res = await fetch(`${API_GERANT}?five=${encodeURIComponent(five)}`);
+  const res = await apiFetch(`/api/gerant?five=${encodeURIComponent(five)}`);
   const data = await res.json();
   allMatchs = data.matchs || [];
   const stats = data.stats || {};
@@ -1131,7 +1154,7 @@ async function loadData() {
   renderResTable();
 
   // Terrain info
-  const resF = await fetch(API_FIVES);
+  const resF = await apiFetch('/api/fives');
   const fives = await resF.json();
   const fiveObj = fives.find(f => (f.nom || f.name) === five);
   if (fiveObj) { loadFiveInfo(fiveObj); loadAvisPage(five); }
@@ -1290,10 +1313,9 @@ async function loadAvisPage(five) {
     </div>
   `).join('');
   // Charger les avis (API ou localStorage)
-  const localNotes = JSON.parse(localStorage.getItem('matchday_notes') || '[]');
   try {
-    const notesRes = await fetch('https://matchday-backend-eight.vercel.app/api/notations?email=all');
-    const allNotes = notesRes.ok ? await notesRes.json() : localNotes;
+    const notesRes = await apiFetch('/api/notations?email=all');
+    const allNotes = notesRes.ok ? await notesRes.json() : [];
       // Filtrer les avis liés aux matchs de ce five
       const fiveMatchIds = new Set(allMatchs.map(m => m.id));
       const fiveNotes = allNotes.filter(n => fiveMatchIds.has(n.match_id));
@@ -1320,7 +1342,7 @@ async function loadAvisPage(five) {
             <div style="background:var(--lime-muted);border:1px solid rgba(200,245,32,0.2);width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;flex-shrink:0;color:var(--lime-dark);">${n.note}★</div>
             <div style="flex:1;">
               <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">${new Date(n.created_at||Date.now()).toLocaleDateString('fr-FR')}</div>
-              ${n.commentaire ? `<div style="font-size:13px;margin-top:4px;line-height:1.5;">"${n.commentaire}"</div>` : '<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;">Aucun commentaire</div>'}
+              ${n.commentaire ? `<div style="font-size:13px;margin-top:4px;line-height:1.5;">"${escHtml(n.commentaire)}"</div>` : '<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;">Aucun commentaire</div>'}
             </div>
           </div>
         `).join('');
@@ -1342,7 +1364,7 @@ async function loadAvisPage(five) {
             <div style="background:var(--lime-muted);border:1px solid rgba(200,245,32,0.2);width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;flex-shrink:0;color:var(--lime-dark);">${n.note}★</div>
             <div style="flex:1;">
               <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">${new Date(n.created_at||Date.now()).toLocaleDateString('fr-FR')}</div>
-              ${n.commentaire ? `<div style="font-size:13px;margin-top:4px;line-height:1.5;">"${n.commentaire}"</div>` : `<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;">Aucun commentaire</div>`}
+              ${n.commentaire ? `<div style="font-size:13px;margin-top:4px;line-height:1.5;">"${escHtml(n.commentaire)}"</div>` : `<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;">Aucun commentaire</div>`}
             </div>
           </div>
         `).join('');
@@ -1442,7 +1464,7 @@ async function saveTerrainInfos() {
   if (!currentFive) { showToast('SÉLECTIONNEZ UN TERRAIN'); return; }
 
   try {
-    const res = await fetch(`${API_BASE}/api/fives`, {
+    const res = await apiFetch('/api/fives', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update', nom: currentFive, prix: parseInt(prix), horaires, adresse, surfaces })
@@ -1809,7 +1831,7 @@ function initRealtime() {
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycXNubWJpcW1vcnR5a3N2dWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM0NjI0MDAsImV4cCI6MjAyOTAzODQwMH0.placeholder';
 
     // Utiliser la clé anon publique depuis les variables d'env
-    fetch('https://matchday-backend-eight.vercel.app/api/matchs')
+    apiFetch('/api/matchs')
       .then(() => {}) // ping pour garder la connexion active
       .catch(() => {});
 
@@ -1832,7 +1854,7 @@ function initRealtime() {
 async function silentReload() {
   if (!currentFive) return;
   try {
-    const res = await fetch(`${API_GERANT}?five=${encodeURIComponent(currentFive)}`);
+    const res = await apiFetch(`/api/gerant?five=${encodeURIComponent(currentFive)}`);
     const data = await res.json();
     const newMatchs = data.matchs || [];
 
@@ -2074,7 +2096,7 @@ function deleteCreneauModal() {
     const pending = JSON.parse(localStorage.getItem('matchday_pending_refunds') || '[]');
     pending.push({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', ts: Date.now() });
     localStorage.setItem('matchday_pending_refunds', JSON.stringify(pending));
-    fetch(API_BASE + '/api/refund', {
+    apiFetch('/api/refund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: '' })
@@ -2151,7 +2173,7 @@ function annulerMatchGerant(matchId) {
     const pending = JSON.parse(localStorage.getItem('matchday_pending_refunds') || '[]');
     pending.push({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', ts: Date.now() });
     localStorage.setItem('matchday_pending_refunds', JSON.stringify(pending));
-    fetch(API_BASE + '/api/refund', {
+    apiFetch('/api/refund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: 'Annulation depuis espace gérant' })

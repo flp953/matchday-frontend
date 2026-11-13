@@ -100,6 +100,9 @@
   #formSection, #successSection { display: none; }
   #invalidSection { display: none; }
 </style>
+<!-- Vercel Web Analytics (à activer dans le dashboard Vercel > Analytics) -->
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <div class="card">
@@ -140,6 +143,27 @@
 </div>
 
 <script>
+// =========== API ===========
+// Seul endroit où l'URL du backend est écrite.
+const API_BASE = 'https://matchday-backend-eight.vercel.app';
+const SESSION_KEY = 'matchday_session';
+// Anciennes sessions sans token : on force une reconnexion
+try { const _s = JSON.parse(localStorage.getItem(SESSION_KEY)); if (_s && !_s.token) localStorage.removeItem(SESSION_KEY); } catch (e) {}
+function apiFetch(path, opts) {
+  opts = opts || {};
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) {}
+  const headers = Object.assign({}, opts.headers || {});
+  if (s && s.token) headers['Authorization'] = 'Bearer ' + s.token;
+  return fetch(API_BASE + path, Object.assign({}, opts, { headers })).then(res => {
+    // Token expiré ou invalide : on déconnecte proprement
+    if (res.status === 401 && s && !path.startsWith('/api/auth') && !path.startsWith('/api/reset')) {
+      localStorage.removeItem(SESSION_KEY);
+      location.reload();
+    }
+    return res;
+  });
+}
 const token = new URLSearchParams(window.location.search).get('token');
 
 if (!token) {
@@ -166,7 +190,7 @@ async function handleReset() {
   btn.disabled = true;
 
   try {
-    const res = await fetch('https://matchday-backend-eight.vercel.app/api/reset', {
+    const res = await apiFetch('/api/reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password })
