@@ -210,7 +210,7 @@ const App = (() => {
   function carteFive(f, d) {
     const p = prochainCreneau(f);
     const img = f.photos && f.photos[0] ? `<img src="${esc(f.photos[0])}" alt="" loading="lazy">` : esc(f.nom.split(' ').map(x => x[0]).join('').slice(0, 2));
-    const auj0 = libres(f, auj(), 60, 'terrain').slice(0, 8);
+    const auj0 = p ? libres(f, p.d, 60, 'match').slice(0, 8) : [];
     return `<div class="carte tap" onclick="App.reserver(${js(f.nom)})">
       <div class="ligne">
         <div class="five-img">${img}</div>
@@ -219,7 +219,7 @@ const App = (() => {
           <div class="meta">${p ? 'Dispo ' + jour(p.d).toLowerCase() + ' à ' + fh(p.h) : 'Complet cette semaine'}</div></div>
         <div class="prix">${euros(pjFive(f, 60))}<small>/joueur</small></div>
       </div>
-      ${auj0.length ? `<div class="creneaux">${auj0.map(h => `<span class="cr">${fh(h)}</span>`).join('')}</div>` : ''}
+      ${auj0.length ? `<div class="creneaux">${auj0.map(h => `<button class="cr" onclick="event.stopPropagation();App.reserver(${js(f.nom)},{date:'${p.d}',h:${h}})">${fh(h)}</button>`).join('')}</div>` : ''}
     </div>`;
   }
 
@@ -401,7 +401,7 @@ const App = (() => {
       if (m.statut === 'confirmed' && m.type !== 'terrain') b.push(`<button class="btn petit" onclick="App.chat(${js(m.id)})">💬 Chat</button>`);
       if (m.statut === 'open' && m.capitaine) b.push(`<button class="btn petit lime" onclick="App.partager(${js(m.id)})">📣 Trouver un adversaire</button>`);
       b.push(`<a class="btn petit clair" href="${maps(f, m)}" target="_blank" rel="noopener">🗺️ Y aller</a>`);
-      b.push(`<button class="btn petit clair" onclick="App.agenda(${js(m.id)})">📅</button>`);
+      b.push(`<button class="btn petit clair" onclick="App.agenda(${js(m.id)})">📅 Agenda</button>`);
       if (m.capitaine && (m.statut === 'open' || m.statut === 'confirmed')) b.push(`<button class="btn petit danger" onclick="App.annuler(${js(m.id)})">Annuler</button>`);
     }
     if (joue) {

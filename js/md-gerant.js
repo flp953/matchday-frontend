@@ -25,6 +25,8 @@
     const form = document.getElementById('terrain-edit-form');
     if (!form || form.dataset.md) return;
     form.dataset.md = '1';
+    form.insertAdjacentHTML('afterbegin',
+      champ('edit-pj', 'Prix par joueur pour 1h (€) · c\'est aussi l\'acompte', '<input type="number" min="3" max="60" step="0.5" id="edit-pj" class="filter-select" style="width:100%;padding:10px 12px;font-weight:700;" placeholder="8">'));
     form.insertAdjacentHTML('beforeend',
       champ('edit-nb', 'Nombre de terrains', '<input type="number" min="1" max="20" id="edit-nb" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="1">') +
       champ('edit-metro', 'Métro / RER le plus proche', '<input type="text" id="edit-metro" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="Pigalle (2, 12)">') +
@@ -42,7 +44,7 @@
     installerChamps();
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v == null ? '' : v; };
     const chk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
-    set('edit-nb', five.nb_terrains || 1); set('edit-metro', five.metro); set('edit-tel', five.telephone);
+    set('edit-pj', five.prix_joueur || Math.round((parseFloat(five.prix) || 80) / 10)); set('edit-nb', five.nb_terrains || 1); set('edit-metro', five.metro); set('edit-tel', five.telephone);
     set('edit-message', five.message); set('edit-photos', (five.photos || []).join('\n'));
     chk('edit-vestiaires', five.vestiaires); chk('edit-douches', five.douches); chk('edit-parking', five.parking);
     rafraichirBloques();
@@ -56,7 +58,7 @@
     try {
       await post('/api/fives', {
         action: 'update', nom: currentFive,
-        prix: parseInt(v('edit-prix'), 10) || null, horaires: v('edit-horaires'), adresse: v('edit-adresse'),
+        prix: parseInt(v('edit-prix'), 10) || null, prix_joueur: parseFloat(v('edit-pj')) || null, horaires: v('edit-horaires'), adresse: v('edit-adresse'),
         surfaces: v('edit-surfaces'), message: v('edit-message'), metro: v('edit-metro'), telephone: v('edit-tel'),
         nb_terrains: parseInt(v('edit-nb'), 10) || 1,
         vestiaires: c('edit-vestiaires'), douches: c('edit-douches'), parking: c('edit-parking'),

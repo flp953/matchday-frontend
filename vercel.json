@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/app",
-      "destination": "/matchday-app-v3.html"
+      "destination": "/app.html"
     },
     {
       "source": "/reset",
