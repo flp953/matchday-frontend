@@ -8,7 +8,13 @@
   }
 </script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#181614">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Matchday">
+<link rel="stylesheet" href="/css/md.css">
 <title>Matchday — Football 5 à Paris</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1518,7 +1524,7 @@ body {
 
   <!-- Hero header compact -->
   <div style="padding:28px 40px 24px;border-bottom:1px solid var(--line-heavy);">
-    <div style="font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;">Saison 2024–25</div>
+    <div style="font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;" data-md-saison>Saison 2024–25</div>
     <div id="db-title" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;letter-spacing:-2px;line-height:1;text-transform:uppercase;">Bonjour, <em style="font-style:italic;color:var(--muted2);">—</em></div>
   </div>
 
@@ -1681,7 +1687,7 @@ body {
 <div class="page" id="page-classement">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="page-label">Saison 2024–25</div>
+      <div class="page-label" data-md-saison>Saison 2024–25</div>
       <div class="page-title">Classe<em>ment</em></div>
     </div>
   </div>
@@ -1834,15 +1840,15 @@ body {
       <strong style="color:var(--ink);">2. Inscription</strong><br>
       L'inscription est gratuite et ouverte à toute personne physique majeure. L'utilisateur s'engage à fournir des informations exactes et à maintenir la confidentialité de ses identifiants.<br><br>
       <strong style="color:var(--ink);">3. Réservations et paiements</strong><br>
-      Toute réservation est soumise au paiement d'un acompte de 20€ par équipe via notre prestataire sécurisé Stripe. Le solde restant est réglé directement au terrain le jour du match.<br><br>
+      Pour réserver, chaque équipe paie en ligne via notre prestataire sécurisé Stripe : soit un acompte de 20 €, soit sa part complète du terrain, soit chaque joueur paie sa part avec un lien. Le reste éventuel est réglé directement au Five le jour du match. Un match contre une équipe est confirmé quand les deux équipes ont payé. Matchday prélève une commission de 10 % sur les réservations, le reste est reversé au Five.<br><br>
       <strong style="color:var(--ink);">4. Annulations et remboursements</strong><br>
-      • Plus de 48h avant le match : remboursement intégral.<br>
-      • Entre 24h et 48h : remboursement à 50%.<br>
-      • Moins de 24h : aucun remboursement.<br><br>
-      <strong style="color:var(--ink);">5. Responsabilité</strong><br>
+      • Jusqu'à 24h avant le début du match : annulation gratuite, tout ce que l'équipe a payé est remboursé.<br>
+      • Moins de 24h avant le match : pas de remboursement pour l'équipe qui annule.<br>
+      • Si l'équipe adverse annule, ton équipe est remboursée intégralement, quel que soit le délai.<br>
+      • Si aucune équipe ne relève le défi au plus tard 2h avant le match, il est annulé et remboursé intégralement.<br><br>      <strong style="color:var(--ink);">5. Responsabilité</strong><br>
       Matchday agit en tant qu'intermédiaire. La responsabilité des matchs incombe aux équipes et aux terrains. Matchday ne peut être tenu responsable d'accidents, dommages ou litiges survenant lors des matchs.<br><br>
       <strong style="color:var(--ink);">6. Propriété intellectuelle</strong><br>
-      L'ensemble des contenus de la plateforme (logo, design, code) est la propriété exclusive de Matchday SAS.<br><br>
+      L'ensemble des contenus de la plateforme (logo, design, code) est la propriété exclusive de l'éditeur de Matchday.<br><br>
       <strong style="color:var(--ink);">7. Droit applicable</strong><br>
       Les présentes CGU sont régies par le droit français. Tout litige relève de la compétence exclusive des tribunaux de Paris.
     </div>
@@ -1850,7 +1856,7 @@ body {
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:16px;">Politique de Confidentialité (RGPD)</div>
     <div style="font-size:12px;line-height:1.9;color:var(--muted);margin-bottom:28px;">
       <strong style="color:var(--ink);">Données collectées</strong><br>
-      Adresse email, numéro de téléphone, pseudo, historique des matchs et paiements.<br><br>
+      Adresse email, numéro de téléphone, pseudo, équipes, présences, messages échangés avec l'équipe adverse, scores, notes, historique des matchs et paiements, et, si tu l'actives, ta position pour trier les fives par distance (elle reste sur ton appareil).<br><br>
       <strong style="color:var(--ink);">Finalités</strong><br>
       Gestion des comptes, réservations, paiements, classement, et communications liées aux matchs.<br><br>
       <strong style="color:var(--ink);">Conservation</strong><br>
@@ -1858,14 +1864,14 @@ body {
       <strong style="color:var(--ink);">Vos droits</strong><br>
       Accès, rectification, effacement, portabilité, opposition : contactez-nous à <strong>privacy@matchday.fr</strong><br><br>
       <strong style="color:var(--ink);">Responsable de traitement</strong><br>
-      Matchday SAS — 75009 Paris — SIRET en cours d'enregistrement.
+      [À COMPLÉTER : nom ou raison sociale, adresse, SIRET de l'éditeur]
     </div>
 
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:16px;">Mentions légales</div>
     <div style="font-size:12px;line-height:1.9;color:var(--muted);">
-      <strong style="color:var(--ink);">Éditeur</strong> : Matchday SAS, Paris, France<br>
-      <strong style="color:var(--ink);">Directeur de publication</strong> : Équipe Matchday<br>
-      <strong style="color:var(--ink);">Hébergement</strong> : Vercel Inc., San Francisco, CA, USA<br>
+      <strong style="color:var(--ink);">Éditeur</strong> : [À COMPLÉTER : nom ou raison sociale, statut, adresse, SIRET]<br>
+      <strong style="color:var(--ink);">Directeur de publication</strong> : [À COMPLÉTER : nom et prénom]<br>
+      <strong style="color:var(--ink);">Hébergement</strong> : Vercel Inc., États-Unis (vercel.com)<br>
       <strong style="color:var(--ink);">Paiements</strong> : Stripe Inc. — prestataire certifié PCI-DSS<br>
       <strong style="color:var(--ink);">Contact</strong> : hello@matchday.fr
     </div>
@@ -1921,7 +1927,7 @@ body {
         <div class="step-item todo"><div class="step-num-box">3</div><span>Paiement</span></div>
       </div>
       <div class="form-row" style="margin-bottom:16px;">
-        <div class="form-group" style="margin-bottom:0;"><label class="form-label">Ville</label><select class="form-input"><option>Paris</option><option>Lyon</option></select></div>
+        <div class="form-group" style="margin-bottom:0;"><label class="form-label">Ville</label><select class="form-input"><option>Île-de-France</option></select></div>
         <div class="form-group" style="margin-bottom:0;"><label class="form-label">Niveau</label><select class="form-input"><option>Débutant</option><option selected>Intermédiaire</option><option>Avancé</option></select></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -2454,7 +2460,7 @@ async function fetchAndRenderFives(lat, lng) {
       ...f,
       name: f.nom,
       loc: f.lieu,
-      rate: '4.8',
+      rate: f.note_moyenne || null,
       price: f.prix,
       creneaux: [] // sera chargé async au step 2
     }));
@@ -2700,7 +2706,7 @@ function renderFives() {
     const favBadge = isFavori ? '<span style="font-size:9px;background:var(--lime);color:var(--ink);padding:2px 6px;font-weight:700;letter-spacing:1px;margin-left:6px;">FAVORI</span>' : '';
     const distBadge = distLabel ? '<span style="font-size:10px;color:var(--lime);font-weight:600;margin-left:6px;">'+distLabel+'</span>' : '';
     return `<div class="five-card-item${isFavori?' five-favori':''}" id="fci-${i}" onclick="selFiveCard(${i})">
-      <div class="fci-rate">${f.rate||'4.8'} ★</div>
+      <div class="fci-rate">${f.rate ? f.rate + ' ★' : 'Nouveau'}</div>
       <div class="fci-name">${f.name||f.nom}${favBadge}${distBadge}</div>
       <div class="fci-loc">${f.loc||f.lieu||''} · ${f.price||''}€/h</div>
     </div>`;
@@ -4614,16 +4620,18 @@ function obSavePseudo() {
 
 // =========== FAQ / AIDE ===========
 const FAQ_DATA = [
-  { q: `Comment créer un match ?`, r: `Clique sur "+ Créer un match" dans la barre de navigation. Choisis un Five, un créneau disponible, puis règle l'acompte (20€) par carte bancaire. Ton match est immédiatement visible par les autres équipes.` },
-  { q: `Quel est le montant de l'acompte ?`, r: `L'acompte est de 20€ par équipe, soit 40€ au total. Le reste du prix du terrain est réglé directement sur place le jour du match.` },
-  { q: `Puis-je annuler un match ?`, r: `Oui, depuis Mes matchs via le bouton Annuler. Le remboursement dépend du délai : 100% si plus de 48h avant, 50% entre 24h et 48h, 0% en dessous de 24h.` },
-  { q: `Comment rejoindre un match existant ?`, r: `Dans "Trouver un match", tu vois tous les matchs en attente d'adversaire. Clique sur "Rejoindre", choisis ton mode de paiement et confirme.` },
-  { q: `Les points, ça sert à quoi ?`, r: `Les points alimentent le classement général Matchday. Tu gagnes 12 pts sur la feuille de match, 6 pts hors feuille. Ils déterminent ton niveau : Débutant, Amateur, Intermédiaire, Avancé, Expert.` },
-  { q: `Comment fonctionne la notation ?`, r: `Après chaque match confirmé, tu peux noter ton adversaire de 1 à 5 étoiles. La note moyenne apparaît sur ton profil et compte dans le classement.` },
-  { q: `Le paiement est-il sécurisé ?`, r: `Oui. Tous les paiements sont traités par Stripe, certifié PCI-DSS. Matchday ne stocke jamais tes coordonnées bancaires.` },
-  { q: `Je n'ai pas reçu l'email de confirmation.`, r: `Vérifie tes spams. Si tu ne trouves pas, contacte-nous à hello@matchday.fr avec ton adresse email et le détail de ta réservation.` },
-  { q: `Comment modifier mon pseudo ?`, r: `Va dans "Mon profil" et clique sur le bouton Modifier en haut à droite.` },
-  { q: `Le Five peut-il annuler un créneau ?`, r: `Dans des cas exceptionnels (maintenance, événement privé), le Five peut annuler un créneau. Tu seras remboursé intégralement et notifié par email.` },
+  { q: `Comment réserver un five ?`, r: `Clique sur "+ Créer un match". Choisis le jour, puis un créneau libre dans un five, donne le nom de ton équipe et paie. C'est tout. Tu peux réserver pour jouer contre une autre équipe, ou juste le terrain entre potes.` },
+  { q: `Combien je paie ?`, r: `Chaque équipe paie la moitié du terrain. Tu choisis : un acompte de 20€ (le reste sur place), tout en ligne, ou chacun paie sa part avec un lien que tu envoies sur WhatsApp. Le prix par joueur est affiché partout.` },
+  { q: `Puis-je annuler ?`, r: `Oui, depuis Mes matchs. Jusqu'à 24h avant le match, tout est remboursé. Moins de 24h avant, pas de remboursement pour l'équipe qui annule. Si l'adversaire annule, tu es remboursé intégralement.` },
+  { q: `Et si personne ne relève mon défi ?`, r: `Si aucune équipe ne te rejoint au plus tard 2h avant le match, il est annulé automatiquement et tu es remboursé à 100%.` },
+  { q: `Comment savoir qui vient de mon équipe ?`, r: `Dans Mes matchs, clique sur "Qui vient ?" puis envoie le lien sur WhatsApp. Chacun répond en un clic. Ceux qui n'ont pas répondu sont relancés par mail la veille.` },
+  { q: `Il me manque un joueur, je fais comment ?`, r: `Dans Mes matchs, "Il me manque des joueurs" : indique combien de places sont libres. Les joueurs seuls les voient dans "Trouver un match" et peuvent demander à compléter.` },
+  { q: `Comment est calculé mon niveau ?`, r: `Avec tes vrais résultats : chaque score validé par les deux équipes fait évoluer ton indice (gagner contre une équipe plus forte rapporte plus). Débutant, Intermédiaire, puis Avancé.` },
+  { q: `Les points, ça sert à quoi ?`, r: `Le classement par ville et par mois. Chaque match joué rapporte 12 pts, une victoire 3 pts de plus.` },
+  { q: `Comment fonctionne la notation ?`, r: `Après le match, tu notes l'équipe adverse et le terrain. Ta note reste cachée jusqu'à ce que l'autre équipe ait noté aussi (ou 7 jours après), pour éviter les représailles.` },
+  { q: `Le paiement est-il sécurisé ?`, r: `Oui. Tous les paiements passent par Stripe (CB, Apple Pay, Google Pay). Matchday ne voit jamais tes coordonnées bancaires.` },
+  { q: `Je n'ai pas reçu l'email de confirmation.`, r: `Regarde dans tes spams. Sinon, à la connexion, clique sur "Renvoyer le mail de confirmation", ou écris-nous à hello@matchday.fr.` },
+  { q: `Le Five peut-il annuler un créneau ?`, r: `Dans des cas exceptionnels (maintenance, événement privé), le Five peut annuler. Tu es alors remboursé intégralement et prévenu par email.` },
 ];
 
 function renderFAQ() {
@@ -4800,10 +4808,19 @@ function validatePhone(phone) {
 
 
 // =========== INIT ===========
-loadMatchs();
-loadFives();
-agInit();
-startMatchPolling();
+// Lancé quand toute la page (et les scripts js/md-*.js) est chargée
+document.addEventListener('DOMContentLoaded', () => {
+  loadMatchs();
+  loadFives();
+  agInit();
+  startMatchPolling();
+});
 </script>
+<script src="/js/md-core.js"></script>
+<script src="/js/md-auth.js"></script>
+<script src="/js/md-matchs.js"></script>
+<script src="/js/md-mes-matchs.js"></script>
+<script src="/js/md-communaute.js"></script>
+<script src="/js/md-alertes.js"></script>
 </body>
 </html>

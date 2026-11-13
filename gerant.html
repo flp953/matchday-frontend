@@ -321,6 +321,7 @@ body {
 <!-- Vercel Web Analytics (à activer dans le dashboard Vercel > Analytics) -->
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="/css/md.css">
 </head>
 <body>
 
@@ -2209,8 +2210,12 @@ function loadExportRecap() {
 }
 
 // =========== INIT ===========
-const session = getSession();
-if (session) { showApp(session); }
+// Lancé quand js/md-gerant.js est chargé aussi
+document.addEventListener('DOMContentLoaded', () => {
+  const session = getSession();
+  if (session) { showApp(session); }
+});
 </script>
+<script src="/js/md-gerant.js"></script>
 </body>
 </html>
