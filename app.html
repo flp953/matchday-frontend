@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Matchday · Réserve ton five</title>
+<meta name="description" content="Réserve un five près de chez toi et défie une équipe en 1 minute.">
+<meta name="theme-color" content="#141210">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Matchday">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <header class="top">
+    <div class="logo">Match<span>day</span></div>
+    <button class="loc" id="loc" onclick="App.localiser(true)">📍 Autour de moi</button>
+  </header>
+  <main id="vue"></main>
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-vue="jouer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/></svg>Jouer</button>
+    <button class="tab" data-vue="mes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Mes matchs<span class="pastille" id="nb-mes" hidden></span></button>
+    <button class="tab" data-vue="classement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21V11M12 21V4M17 21v-7"/></svg>Classement</button>
+    <button class="tab" data-vue="profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Profil</button>
+  </nav>
+</div>
+
+<div class="voile" id="voile" onclick="App.fermer()"></div>
+<div class="feuille" id="feuille"></div>
+<div id="toast"></div>
+
+<!-- Connexion / inscription -->
+<div id="auth">
+  <div class="auth-in">
+    <div class="logo">Match<span>day</span></div>
+    <div class="accroche">Ton five,<br><em>en 1 minute.</em></div>
+    <p class="lead">Trouve un terrain près de toi, défie une équipe, paie ta part. C'est tout.</p>
+
+    <form id="f-login" onsubmit="event.preventDefault(); App.connexion()">
+      <input class="champ" id="l-email" type="email" placeholder="Email" autocomplete="email" required>
+      <input class="champ" id="l-mdp" type="password" placeholder="Mot de passe" autocomplete="current-password" required>
+      <div class="auth-err" id="l-err"></div>
+      <button class="btn lime plein" id="l-btn">Se connecter</button>
+      <div class="auth-lien">Pas encore de compte ? <button type="button" onclick="App.ecranAuth('inscription')">Créer un compte</button></div>
+      <div class="auth-lien"><button type="button" onclick="App.ecranAuth('oubli')">Mot de passe oublié</button></div>
+    </form>
+
+    <form id="f-inscription" hidden onsubmit="event.preventDefault(); App.inscription()">
+      <input class="champ" id="i-pseudo" placeholder="Prénom ou pseudo" maxlength="30" required>
+      <input class="champ" id="i-email" type="email" placeholder="Email" autocomplete="email" required>
+      <input class="champ" id="i-tel" type="tel" placeholder="Téléphone (06…)" autocomplete="tel" required>
+      <input class="champ" id="i-mdp" type="password" placeholder="Mot de passe (8 caractères min.)" autocomplete="new-password" minlength="8" required>
+      <div class="auth-err" id="i-err"></div>
+      <button class="btn lime plein" id="i-btn">Créer mon compte</button>
+      <div class="auth-lien">Déjà inscrit ? <button type="button" onclick="App.ecranAuth('login')">Se connecter</button></div>
+    </form>
+
+    <form id="f-oubli" hidden onsubmit="event.preventDefault(); App.oubli()">
+      <input class="champ" id="o-email" type="email" placeholder="Ton email" required>
+      <div class="auth-err" id="o-err"></div>
+      <button class="btn lime plein" id="o-btn">Recevoir un lien</button>
+      <div class="auth-lien"><button type="button" onclick="App.ecranAuth('login')">Retour</button></div>
+    </form>
+
+    <div id="f-envoye" hidden>
+      <div class="accroche" style="font-size:34px;margin-top:10px;">📩 Regarde<br><em>tes mails</em></div>
+      <p class="lead" id="envoye-txt"></p>
+      <button class="btn lime plein" onclick="App.ecranAuth('login')">J'ai confirmé, je me connecte</button>
+    </div>
+
+    <div class="auth-bas"><a href="/">Comment ça marche</a> · <a href="/cgu">CGU</a> · <a href="/contact">Contact</a></div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
