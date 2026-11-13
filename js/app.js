@@ -669,12 +669,20 @@ const App = (() => {
     }
     b.disabled = false;
   }
-  async function renvoyer() { try { await post('/api/auth', { action: 'renvoyer', email: $('l-email').value.trim() }); toast('Mail renvoyé'); } catch (e) { toast(e.message, true); } }
+  async function renvoyer() {
+    try {
+      const rep = await post('/api/auth', { action: 'renvoyer', email: $('l-email').value.trim() });
+      if (rep.verifie) { toast('Compte activé, tu peux te connecter'); $('l-err').textContent = ''; }
+      else toast('Mail renvoyé (regarde les spams)');
+    } catch (e) { toast(e.message, true); }
+  }
   async function inscription() {
     const b = $('i-btn'); $('i-err').textContent = ''; b.disabled = true;
     try {
       const email = $('i-email').value.trim();
-      await post('/api/auth', { action: 'register', email, password: $('i-mdp').value, phone: $('i-tel').value.trim(), pseudo: $('i-pseudo').value.trim(), role: 'joueur' });
+      const rep = await post('/api/auth', { action: 'register', email, password: $('i-mdp').value, phone: $('i-tel').value.trim(), pseudo: $('i-pseudo').value.trim(), role: 'joueur' });
+      $('l-email').value = email;
+      if (rep.verification === false) { $('l-mdp').value = $('i-mdp').value; b.disabled = false; return connexion(); }
       $('envoye-txt').textContent = `On t'a envoyé un lien à ${email}. Clique dessus pour activer ton compte (regarde aussi les spams).`;
       $('l-email').value = email; ecranAuth('envoye');
     } catch (e) { $('i-err').textContent = e.message; }
