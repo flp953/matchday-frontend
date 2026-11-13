@@ -2476,7 +2476,7 @@ async function fetchAndRenderFives(lat, lng) {
         f.creneaux = cr;
         // Update badge counts silently
         const badge = document.querySelector('#fci-'+i+' .fci-badge-count');
-        const slots = cr.filter(s => s.dateISO === fppSelectedDate && !s.taken);
+        const slots = cr.filter(s => s.dateISO === fpp2SelectedDate && !s.taken);
         if (badge) {
           badge.textContent = slots.length > 0 ? slots.length + ' cr.' : '—';
           badge.style.color = slots.length > 0 ? 'var(--ink)' : 'var(--muted2)';
@@ -3388,6 +3388,7 @@ async function agInit() {
 
 function agShowApp(session) {
   document.getElementById('authGate').classList.remove('show');
+  setTimeout(() => checkOnboarding(session), 800);
 
   // Sidebar
   const initials = session.email.substring(0, 2).toUpperCase();
@@ -4751,12 +4752,6 @@ async function loadNotifications() {
   }
 }
 
-// =========== HOOK AGSHOWAPP pour onboarding ===========
-const _origAgShowApp = agShowApp;
-function agShowApp(session) {
-  _origAgShowApp(session);
-  setTimeout(() => checkOnboarding(session), 800);
-}
 
 // =========== CHARGEMENT PAIEMENTS DANS SHOWPAGE ===========
 document.addEventListener('DOMContentLoaded', () => {
