@@ -26,9 +26,9 @@
     if (!form || form.dataset.md) return;
     form.dataset.md = '1';
     form.insertAdjacentHTML('afterbegin',
-      champ('edit-pj', 'Prix par joueur pour 1h (€) · c\'est aussi l\'acompte', '<input type="number" min="3" max="60" step="0.5" id="edit-pj" class="filter-select" style="width:100%;padding:10px 12px;font-weight:700;" placeholder="8">'));
+      '<input type="hidden" id="edit-pj"><div style="border-left:3px solid var(--ink);background:#fff;padding:10px 12px;font-size:13px;line-height:1.5;">Les horaires, les prix par plage et les terrains se règlent dans <a href="#" onclick="event.preventDefault();showPage(\'terrains\', document.getElementById(\'nav-terrains\'))" style="color:var(--ink);font-weight:700;">Terrains &amp; horaires</a>.</div>');
+    ['edit-prix', 'edit-horaires'].forEach(id => { const el = document.getElementById(id); if (el && el.parentElement) el.parentElement.style.display = 'none'; });
     form.insertAdjacentHTML('beforeend',
-      champ('edit-nb', 'Nombre de terrains', '<input type="number" min="1" max="20" id="edit-nb" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="1">') +
       champ('edit-metro', 'Métro / RER le plus proche', '<input type="text" id="edit-metro" class="filter-select" style="width:100%;padding:10px 12px;" placeholder="Pigalle (2, 12)">') +
       champ('edit-equip', 'Équipements', `<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;">
         <label><input type="checkbox" id="edit-vestiaires"> Vestiaires</label>
@@ -44,7 +44,7 @@
     installerChamps();
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v == null ? '' : v; };
     const chk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
-    set('edit-pj', five.prix_joueur || Math.round((parseFloat(five.prix) || 80) / 10)); set('edit-nb', five.nb_terrains || 1); set('edit-metro', five.metro); set('edit-tel', five.telephone);
+    set('edit-pj', five.prix_joueur || Math.round((parseFloat(five.prix) || 80) / 10)); set('edit-metro', five.metro); set('edit-tel', five.telephone);
     set('edit-message', five.message); set('edit-photos', (five.photos || []).join('\n'));
     chk('edit-vestiaires', five.vestiaires); chk('edit-douches', five.douches); chk('edit-parking', five.parking);
     rafraichirBloques();
@@ -60,11 +60,10 @@
         action: 'update', nom: currentFive,
         prix: parseInt(v('edit-prix'), 10) || null, prix_joueur: parseFloat(v('edit-pj')) || null, horaires: v('edit-horaires'), adresse: v('edit-adresse'),
         surfaces: v('edit-surfaces'), message: v('edit-message'), metro: v('edit-metro'), telephone: v('edit-tel'),
-        nb_terrains: parseInt(v('edit-nb'), 10) || 1,
         vestiaires: c('edit-vestiaires'), douches: c('edit-douches'), parking: c('edit-parking'),
         photos: (v('edit-photos') || '').split('\n').map(x => x.trim()).filter(x => /^https:\/\//.test(x)).slice(0, 6)
       });
-      showToast('INFOS ENREGISTRÉES ✓');
+      showToast('INFOS ENREGISTRÉES');
       await loadData();
     } catch (e) { showToast(e.message.toUpperCase()); }
   };
@@ -111,7 +110,7 @@
     const st = document.getElementById('mc-statut');
     if (st && st.value === 'bloque' && (typeof currentCreneauEdit !== 'undefined' && currentCreneauEdit)) {
       const { dateISO, heure } = currentCreneauEdit;
-      try { await bloquer(dateISO, String(heure).padStart(2, '0') + ':00', document.getElementById('mc-notes').value || null); showToast('CRÉNEAU BLOQUÉ ✓'); }
+      try { await bloquer(dateISO, String(heure).padStart(2, '0') + ':00', document.getElementById('mc-notes').value || null); showToast('CRÉNEAU BLOQUÉ'); }
       catch (e) { showToast(e.message.toUpperCase()); }
       closeCreneauModal(); rafraichirBloques();
       return;
@@ -122,7 +121,7 @@
   // Annulation par le gérant : les deux équipes sont remboursées
   window.annulerMatchGerant = function (matchId) {
     confirmGerant('Annuler ce match ? Les deux équipes seront remboursées intégralement.', async () => {
-      try { await post('/api/refund', { matchId }); showToast('MATCH ANNULÉ · REMBOURSEMENTS EN COURS ✓'); }
+      try { await post('/api/refund', { matchId }); showToast('MATCH ANNULÉ · REMBOURSEMENTS EN COURS'); }
       catch (e) { showToast(e.message.toUpperCase()); }
       loadData();
     });
@@ -152,7 +151,7 @@
     if (!t || !(typeof currentFive !== 'undefined' && currentFive)) return;
     try {
       const s = await api('/api/gerant?stripe=1&five=' + encodeURIComponent(currentFive));
-      if (s.actif) { t.innerHTML = '✅ Virements actifs : chaque réservation vous est reversée automatiquement (moins 10 % de commission Matchday).'; b.style.display = ''; b.textContent = 'Voir mon compte Stripe →'; }
+      if (s.actif) { t.innerHTML = 'Virements actifs : chaque réservation vous est reversée automatiquement (moins 10 % de commission Matchday).'; b.style.display = ''; b.textContent = 'Voir mon compte Stripe →'; }
       else { t.textContent = 'Pour recevoir l\'argent des réservations sur votre compte bancaire, configurez vos virements (5 minutes, via Stripe).'; b.style.display = ''; b.textContent = 'Configurer mes virements →'; }
     } catch (e) { t.textContent = e.message; }
   }
@@ -172,7 +171,7 @@
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;">Export compta</div>
       <div style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Chaque paiement encaissé : date, match, montant payé, commission Matchday, montant reversé, remboursements.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;"><input type="month" id="md-export-mois" class="filter-select" value="${new Date().toISOString().slice(0, 7)}">
-      <button class="btn btn-lime" onclick="mdExportCompta()">📊 Télécharger (CSV)</button></div></div>`);
+      <button class="btn btn-lime" onclick="mdExportCompta()">Télécharger (CSV)</button></div></div>`);
   }
   window.mdExportCompta = async function () {
     const mois = document.getElementById('md-export-mois').value;
@@ -195,5 +194,5 @@
 
   // Retour de Stripe Connect
   const p = new URLSearchParams(location.search);
-  if (p.get('stripe') === 'ok') { history.replaceState({}, '', location.pathname); setTimeout(() => showToast('✅ COMPTE STRIPE MIS À JOUR'), 800); }
+  if (p.get('stripe') === 'ok') { history.replaceState({}, '', location.pathname); setTimeout(() => showToast('COMPTE STRIPE MIS À JOUR'), 800); }
 })();

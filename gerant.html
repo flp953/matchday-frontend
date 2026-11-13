@@ -369,20 +369,20 @@ body {
       <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M10 2C6.5 2 4 4.5 4 8c0 5 6 10 6 10s6-5 6-10c0-3.5-2.5-6-6-6z"/><circle cx="10" cy="8" r="2"/></svg></span>Mon terrain
     </button>
     <button class="nav-item" id="nav-terrains" onclick="showPage(&quot;terrains&quot;, this)">
-      <span class="nav-icon">▦</span>Mes terrains
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="3" y="4.5" width="14" height="12" rx="2"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg></span>Terrains &amp; horaires
     </button>
     <button class="nav-item" id="nav-alertes" onclick="showPage(&quot;alertes&quot;, this)">
-      <span class="nav-icon">🔔</span>Alertes
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M5 14h10l-1.5-2V8a3.5 3.5 0 00-7 0v4z"/><path d="M8.5 16a1.5 1.5 0 003 0"/></svg></span>Alertes
       <span id="alertes-badge" class="nav-badge" style="display:none;background:var(--lime);color:var(--ink);font-size:9px;padding:2px 5px;margin-left:auto;">0</span>
     </button>
     <button class="nav-item" id="nav-blacklist" onclick="showPage(&quot;blacklist&quot;, this)">
-      <span class="nav-icon">🚫</span>Blacklist
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="6.5"/><path d="M5.5 14.5l9-9"/></svg></span>Blacklist
     </button>
     <button class="nav-item" id="nav-exports" onclick="showPage(&quot;exports&quot;, this)">
-      <span class="nav-icon">📄</span>Exports
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 3h6l3 3v11H6z"/><path d="M12 3v3h3"/></svg></span>Exports
     </button>
     <button class="nav-item" id="nav-parametres" onclick="showPage(&quot;parametres&quot;, this)">
-      <span class="nav-icon">⚙️</span>Paramètres
+      <span class="nav-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.4 1.4M13.6 13.6L15 15M5 15l1.4-1.4M13.6 6.4L15 5"/></svg></span>Paramètres
     </button>
   </div>
 
@@ -405,13 +405,13 @@ body {
       <span class="bn-icon">▦</span>Accueil
     </button>
     <button class="bn-item" id="bn-reservations" onclick="showPage('reservations', document.getElementById('nav-reservations'))">
-      <span class="bn-icon">📅</span>Réservations
+      <span class="bn-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="3" y="4.5" width="14" height="12" rx="2"/><path d="M3 8.5h14M7 3v3M13 3v3"/></svg></span>Réservations
     </button>
     <button class="bn-item" id="bn-revenus" onclick="showPage('revenus', document.getElementById('nav-revenus'))">
-      <span class="bn-icon">💶</span>Revenus
+      <span class="bn-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M14 6a5 5 0 100 8M4 9h7M4 11.5h7"/></svg></span>Revenus
     </button>
     <button class="bn-item" id="bn-parametres" onclick="showPage('parametres', document.getElementById('nav-parametres'))">
-      <span class="bn-icon">⚙️</span>Paramètres
+      <span class="bn-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.4 1.4M13.6 13.6L15 15M5 15l1.4-1.4M13.6 6.4L15 5"/></svg></span>Paramètres
     </button>
   </div>
 </nav>
@@ -554,7 +554,7 @@ body {
   <div style="background:var(--cream);max-width:420px;width:100%;border:1px solid var(--line-heavy);">
     <div style="background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
       <div id="mc-title" style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;">Créneau</div>
-      <button onclick="closeCreneauModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;">✕</button>
+      <button onclick="closeCreneauModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;">&times;</button>
     </div>
     <div style="padding:18px;">
       <div id="mc-info" style="background:var(--paper2);border:1px solid var(--line);padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;"></div>
@@ -596,7 +596,7 @@ body {
   <div style="background:var(--cream);max-width:380px;width:100%;border:1px solid var(--line-heavy);">
     <div style="background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;">Nouveau créneau</div>
-      <button onclick="closeNewCreneauModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;">✕</button>
+      <button onclick="closeNewCreneauModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:16px;">&times;</button>
     </div>
     <div style="padding:18px;">
       <div id="nc-label" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px;"></div>
@@ -818,7 +818,7 @@ body {
   </div>
   <div class="content-area">
     <div style="background:rgba(217,59,26,0.06);border:1px solid rgba(217,59,26,0.2);padding:14px;font-size:12px;line-height:1.6;margin-bottom:20px;">
-      ⚠️ Les joueurs blacklistés ne pourront plus réserver de créneaux sur votre Five. Ils ne seront pas notifiés du blocage.
+      Les joueurs blacklistés ne pourront plus réserver de créneaux sur votre Five. Ils ne seront pas notifiés du blocage.
     </div>
     <div class="section-title">Ajouter un joueur</div>
     <div style="display:flex;gap:10px;margin-bottom:24px;">
@@ -852,9 +852,9 @@ body {
           <option value="all">Tout l'historique</option>
         </select>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportCSV()">📊 Exporter CSV</button>
-          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportPDF()">📄 Exporter PDF (facture)</button>
-          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportJSON()">💾 Exporter JSON (données brutes)</button>
+          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportCSV()">Exporter CSV</button>
+          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportPDF()">Exporter PDF (facture)</button>
+          <button class="btn btn-outline" style="justify-content:flex-start;" onclick="exportJSON()">Exporter JSON (données brutes)</button>
         </div>
       </div>
 
@@ -957,7 +957,7 @@ body {
   <div style="width:100%;max-width:440px;background:var(--cream);border:1px solid var(--line-heavy);">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line-heavy);background:var(--ink);">
       <div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff;">Ajouter un terrain</div>
-      <button onclick="closeModal('addTerrain')" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);width:28px;height:28px;cursor:pointer;font-size:12px;">✕</button>
+      <button onclick="closeModal('addTerrain')" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);width:28px;height:28px;cursor:pointer;font-size:12px;">&times;</button>
     </div>
     <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
       <div>
@@ -1550,7 +1550,7 @@ function saveTerrain(idx, nom) {
   if (!five) return;
   localStorage.setItem('matchday_terrain_nom_' + five + '_' + (idx+1), nom);
   terrainsList[idx].nom = nom;
-  showToast('TERRAIN RENOMMÉ ✓');
+  showToast('TERRAIN RENOMMÉ');
 }
 
 function renderMultiPlanning() {
@@ -1630,7 +1630,7 @@ function renderAlertes() {
     el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-size:12px;">Aucune alerte pour l\'instant.<br>Tu seras notifié ici dès qu\'un match est confirmé ou annulé.</div>';
     return;
   }
-  const icons = { match_confirme: '✅', match_annule: '❌', nouveau_match: '⚽', avis: '⭐', paiement: '💳', info: 'ℹ️' };
+  const icons = { match_confirme: 'OK', match_annule: 'X', nouveau_match: 'M', avis: '★', paiement: '€', info: 'i' };
   el.innerHTML = alertes.map(a => `
     <div onclick="markAlerteLue(${a.id})" style="display:flex;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line);cursor:pointer;background:${a.unread?'rgba(200,245,32,0.03)':'transparent'};transition:background 0.1s;">
       <div style="width:36px;height:36px;flex-shrink:0;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:16px;">${icons[a.type]||'🔔'}</div>
@@ -1704,7 +1704,7 @@ function addBlacklist() {
   document.getElementById('blacklist-email').value = '';
   document.getElementById('blacklist-motif').value = '';
   loadBlacklist();
-  showToast('JOUEUR BLOQUÉ ✓');
+  showToast('JOUEUR BLOQUÉ');
 }
 
 function removeBlacklist(idx) {
@@ -1713,7 +1713,7 @@ function removeBlacklist(idx) {
   list.splice(idx, 1);
   localStorage.setItem('matchday_blacklist_' + five, JSON.stringify(list));
   loadBlacklist();
-  showToast('JOUEUR DÉBLOQUÉ ✓');
+  showToast('JOUEUR DÉBLOQUÉ');
 }
 
 // =========== EXPORTS ===========
@@ -1747,7 +1747,7 @@ function exportJSON() {
   a.download = 'matchday-data-' + new Date().toISOString().split('T')[0] + '.json';
   a.click();
   logExport('JSON', filtered.length);
-  showToast('JSON TÉLÉCHARGÉ ✓');
+  showToast('JSON TÉLÉCHARGÉ');
 }
 
 function exportPDF() {
@@ -1929,7 +1929,7 @@ function confirmAddTerrain() {
   closeModal('addTerrain');
   document.getElementById('new-terrain-nom').value = '';
   loadTerrains();
-  showToast('TERRAIN AJOUTE ✓');
+  showToast('TERRAIN AJOUTE');
 }
 
 function removeTerrain(idx) {
@@ -2080,9 +2080,9 @@ function saveCreneauModal() {
       creneaux.push({ date: dateISO, heure: heureStr, raison: notes || 'Bloqué par gérant', blockedAt: new Date().toISOString() });
       if (currentFive) localStorage.setItem('matchday_creneaux_bloques_' + currentFive, JSON.stringify(creneaux));
     }
-    showToast('CRÉNEAU BLOQUÉ ✓');
+    showToast('CRÉNEAU BLOQUÉ');
   } else {
-    showToast('CRÉNEAU MIS À JOUR ✓');
+    showToast('CRÉNEAU MIS À JOUR');
   }
   closeCreneauModal();
   renderCalGrid();
@@ -2102,7 +2102,7 @@ function deleteCreneauModal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: '' })
     }).catch(() => {});
-    showToast('MATCH ANNULÉ ✓');
+    showToast('MATCH ANNULÉ');
     closeCreneauModal();
     loadData();
   });
@@ -2113,7 +2113,7 @@ function createNewCreneau() {
   const fin = document.getElementById('nc-fin').value;
   const prix = document.getElementById('nc-prix').value;
   if (!debut || !fin) { showToast('HEURE REQUISE'); return; }
-  showToast(`CRÉNEAU ${debut}–${fin} AJOUTÉ ✓`);
+  showToast(`CRÉNEAU ${debut}–${fin} AJOUTÉ`);
   closeNewCreneauModal();
   renderCalGrid();
 }
@@ -2161,9 +2161,9 @@ function genererCreneauxAuto() {
   }
 
   const statusEl = document.getElementById('param-status');
-  if (statusEl) statusEl.innerHTML = `<div style="color:var(--lime-dark);font-weight:600;margin-bottom:8px;">✓ Configuration enregistrée</div><div style="line-height:1.8;">Créneaux : ${generated} sur 30 jours<br>Horaires : ${ouverture} – ${fermeture}<br>Durée : ${duree === 'both' ? '1h + 1h30' : duree + ' min'}<br>Prix : ${prixPleine}€/h pleine · ${prixCreuse}€/h creuse<br>Jours : ${jours.join(', ')}</div>`;
+  if (statusEl) statusEl.innerHTML = `<div style="color:var(--lime-dark);font-weight:600;margin-bottom:8px;">Configuration enregistrée</div><div style="line-height:1.8;">Créneaux : ${generated} sur 30 jours<br>Horaires : ${ouverture} – ${fermeture}<br>Durée : ${duree === 'both' ? '1h + 1h30' : duree + ' min'}<br>Prix : ${prixPleine}€/h pleine · ${prixCreuse}€/h creuse<br>Jours : ${jours.join(', ')}</div>`;
 
-  showToast(`${generated} CRÉNEAUX CONFIGURÉS ✓`);
+  showToast(`${generated} CRÉNEAUX CONFIGURÉS`);
   renderCalGrid();
 }
 
@@ -2179,9 +2179,9 @@ function annulerMatchGerant(matchId) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchId, email: session?.email || '', motif: 'Annulé par le gérant', detail: 'Annulation depuis espace gérant' })
     }).then(r => r.json()).then(data => {
-      if (data.success) showToast('REMBOURSEMENT CONFIRMÉ ✓');
+      if (data.success) showToast('REMBOURSEMENT CONFIRMÉ');
     }).catch(() => {});
-    showToast('MATCH ANNULÉ — REMBOURSEMENT EN COURS ✓');
+    showToast('MATCH ANNULÉ — REMBOURSEMENT EN COURS');
     loadData();
   });
 }
@@ -2217,5 +2217,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script src="/js/md-gerant.js"></script>
+<script src="/js/gerant-horaires.js"></script>
 </body>
 </html>

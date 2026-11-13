@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Matchday · Réserve ton five</title>
 <meta name="description" content="Réserve un five près de chez toi et défie une équipe en 1 minute.">
-<meta name="theme-color" content="#141210">
+<meta name="theme-color" content="#0E1116">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matchday">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,900&family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -22,7 +22,7 @@
 <div id="app">
   <header class="top">
     <div class="logo">Match<span>day</span></div>
-    <button class="loc" id="loc" onclick="App.localiser(true)">📍 Autour de moi</button>
+    <button class="loc" id="loc" onclick="App.localiser(true)">Autour de moi</button>
   </header>
   <main id="vue"></main>
   <nav class="tabs" id="tabs">
@@ -41,7 +41,7 @@
 <div id="auth">
   <div class="auth-in">
     <div class="logo">Match<span>day</span></div>
-    <div class="accroche">Ton five,<br><em>en 1 minute.</em></div>
+    <div class="accroche">Réserve ton five.<br><em>Trouve un adversaire.</em></div>
     <p class="lead">Trouve un terrain près de toi, défie une équipe, paie ta part. C'est tout.</p>
 
     <form id="f-login" onsubmit="event.preventDefault(); App.connexion()">
@@ -71,7 +71,7 @@
     </form>
 
     <div id="f-envoye" hidden>
-      <div class="accroche" style="font-size:34px;margin-top:10px;">📩 Regarde<br><em>tes mails</em></div>
+      <div class="accroche" style="font-size:34px;margin-top:10px;">Vérifie<br><em>tes mails</em></div>
       <p class="lead" id="envoye-txt"></p>
       <button class="btn lime plein" onclick="App.ecranAuth('login')">J'ai confirmé, je me connecte</button>
     </div>

@@ -89,8 +89,8 @@ const App = (() => {
   // ---------------------------------------------------------------
   function majLoc() {
     const b = $('loc');
-    if (pos) { b.textContent = '📍 Autour de moi'; b.classList.remove('off'); }
-    else { b.textContent = '📍 Activer ma position'; b.classList.add('off'); }
+    if (pos) { b.textContent = 'Autour de moi'; b.classList.remove('off'); }
+    else { b.textContent = 'Activer ma position'; b.classList.add('off'); }
   }
   function localiser(insister) {
     return new Promise(resolve => {
@@ -108,35 +108,18 @@ const App = (() => {
   }
 
   // ---------------------------------------------------------------
-  // Créneaux libres d'un five
+  // Créneaux libres d'un five : calculés par le serveur (plages, terrains,
+  // durées autorisées, prix heures creuses / pleines)
   // ---------------------------------------------------------------
-  function horaires(txt) {
-    const t = String(txt || '').match(/(\d{1,2})\s*[h:]\s*(\d{2})?\s*[-–à]\s*(\d{1,2})\s*[h:]?\s*(\d{2})?/i);
-    if (!t) return { ouv: 9 * 60, ferm: 23 * 60 };
-    let ouv = parseInt(t[1], 10) * 60 + (t[2] ? parseInt(t[2], 10) : 0), ferm = parseInt(t[3], 10) * 60 + (t[4] ? parseInt(t[4], 10) : 0);
-    if (ferm <= ouv) ferm = 24 * 60;
-    return { ouv, ferm };
+  const cacheDispo = {};
+  async function dispo(nom, isoD, type) {
+    const k = nom + '|' + isoD + '|' + type, c = cacheDispo[k];
+    if (c && Date.now() - c.t < 30000) return c.v;
+    const v = (await api('/api/fives?dispo=' + encodeURIComponent(nom) + '&date=' + isoD + '&type=' + type)).creneaux || [];
+    cacheDispo[k] = { t: Date.now(), v };
+    return v;
   }
-  // type 'match' : au moins 3h d'avance (le temps qu'une équipe relève le défi)
-  function libres(f, isoD, duree, type) {
-    const { ouv, ferm } = horaires(f.horaires);
-    const cap = parseInt(f.nb_terrains, 10) || 1;
-    const pris = publics.filter(m => m.terrain === f.nom && m.date_iso === isoD && m.statut !== 'cancelled')
-      .map(m => { const d = minutesDebut(m.heure); return d == null ? null : [d, d + (m.duree || 60)]; })
-      .concat((f.bloques || []).filter(b => b.date === isoD).map(b => { const d = minutesDebut(b.heure); return d == null ? null : [d, d + (b.duree || 60)]; }))
-      .filter(Boolean);
-    const now = new Date(), mini = isoD === auj() ? now.getHours() * 60 + now.getMinutes() + (type === 'terrain' ? 60 : 180) : 0;
-    const out = [];
-    for (let h = ouv; h + duree <= ferm; h += 30) {
-      if (h < mini) continue;
-      if (pris.filter(([a, b]) => h < b && a < h + duree).length < cap) out.push(h);
-    }
-    return out;
-  }
-  function prochainCreneau(f) {
-    for (let i = 0; i < 7; i++) { const d = decale(i), l = libres(f, d, 60, 'match'); if (l.length) return { d, h: l[0] }; }
-    return null;
-  }
+  const viderDispo = () => Object.keys(cacheDispo).forEach(k => delete cacheDispo[k]);
 
   // ---------------------------------------------------------------
   // Chargement des données
@@ -164,7 +147,7 @@ const App = (() => {
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => aller(t.dataset.vue)));
 
   const squelettes = n => Array.from({ length: n }, () => '<div class="squelette"></div>').join('');
-  const vide = (i, t, p, btn) => `<div class="vide"><i>${i}</i><b>${t}</b><p>${p}</p>${btn || ''}</div>`;
+  const vide = (i, t, p, btn) => `<div class="vide">${i ? `<i>${i}</i>` : ''}<b>${t}</b><p>${p}</p>${btn || ''}</div>`;
 
   // ---------------------------------------------------------------
   // Onglet JOUER
@@ -180,16 +163,16 @@ const App = (() => {
       .sort((a, b) => debut(a.m) - debut(b.m)).slice(0, 8);
 
     v.innerHTML = `<div class="vue">
-      <div class="titre">Salut ${esc(nomJoueur())} 👋</div>
+      <div class="titre">Bonjour ${esc(nomJoueur())}</div>
       <div class="sous">${pos ? 'Les fives les plus proches de toi.' : 'Active ta position pour voir les fives autour de toi.'}</div>
-      ${!pos ? `<button class="btn lime plein" onclick="App.localiser(true)">📍 Voir les fives autour de moi</button>` : ''}
+      ${!pos ? `<button class="btn lime plein" onclick="App.localiser(true)">Voir les fives autour de moi</button>` : ''}
 
-      ${defis.length ? `<div class="section"><h2>⚔️ Ils cherchent un adversaire</h2><small>${defis.length}</small></div>
+      ${defis.length ? `<div class="section"><h2>Ils cherchent un adversaire</h2><small>${defis.length}</small></div>
       ${defis.map(({ m, d }) => carteDefi(m, d)).join('')}` : ''}
 
-      <div class="section"><h2>🏟️ Fives ${pos ? 'autour de toi' : ''}</h2><small>${fs.length}</small></div>
-      ${fs.length ? fs.map(({ f, d }) => carteFive(f, d)).join('') : vide('🏟️', 'Aucun five pour l\'instant', 'Les fives partenaires arrivent bientôt.')}
-      ${!defis.length && fs.length ? `<div class="info">Personne ne cherche d'adversaire pour l'instant. Réserve un five : ton défi apparaîtra ici pour les autres équipes. <button class="btn petit clair" style="margin-top:8px" onclick="App.alerte()">🔔 Me prévenir quand un match tombe</button></div>` : ''}
+      <div class="section"><h2>Fives ${pos ? 'autour de toi' : ''}</h2><small>${fs.length}</small></div>
+      ${fs.length ? fs.map(({ f, d }) => carteFive(f, d)).join('') : vide('', 'Aucun five pour l\'instant', 'Les fives partenaires arrivent bientôt.')}
+      ${!defis.length && fs.length ? `<div class="info">Personne ne cherche d'adversaire pour l'instant. Réserve un five : ton défi apparaîtra ici pour les autres équipes. <button class="btn petit clair" style="margin-top:8px" onclick="App.alerte()">Me prévenir quand un match tombe</button></div>` : ''}
     </div>`;
   }
 
@@ -203,23 +186,23 @@ const App = (() => {
           <div class="meta">${esc(m.terrain)}${d != null ? ' · ' + fkm(d) : ''}</div></div>
         <div class="prix">${euros(pjMatch(m))}<small>/joueur</small></div>
       </div>
-      <div class="actions"><span class="badge ${m.niveau === 'Avancé' ? 'rouge' : m.niveau === 'Débutant' ? 'lime' : 'bleu'}">${esc(m.niveau || 'Tous niveaux')}</span><span style="flex:1"></span><button class="btn petit lime">Relever le défi →</button></div>
+      <div class="actions"><span class="badge ${m.niveau === 'Avancé' ? 'rouge' : m.niveau === 'Débutant' ? 'lime' : 'bleu'}">${esc(m.niveau || 'Tous niveaux')}</span><span style="flex:1"></span><button class="btn petit lime">Relever le défi</button></div>
     </div>`;
   }
 
   function carteFive(f, d) {
-    const p = prochainCreneau(f);
+    const p = f.prochain;
     const img = f.photos && f.photos[0] ? `<img src="${esc(f.photos[0])}" alt="" loading="lazy">` : esc(f.nom.split(' ').map(x => x[0]).join('').slice(0, 2));
-    const auj0 = p ? libres(f, p.d, 60, 'match').slice(0, 8) : [];
+    const crs = p ? p.creneaux.map(minutesDebut) : [];
     return `<div class="carte tap" onclick="App.reserver(${js(f.nom)})">
       <div class="ligne">
         <div class="five-img">${img}</div>
         <div class="grow"><div class="nom">${esc(f.nom)}</div>
-          <div class="meta">${esc(f.lieu || '')}${d != null ? ' · ' + fkm(d) : ''}${f.note_moyenne ? ' · ★ ' + f.note_moyenne : ''}</div>
-          <div class="meta">${p ? 'Dispo ' + jour(p.d).toLowerCase() + ' à ' + fh(p.h) : 'Complet cette semaine'}</div></div>
-        <div class="prix">${euros(pjFive(f, 60))}<small>/joueur</small></div>
+          <div class="meta">${esc(f.lieu || '')}${d != null ? ' · ' + fkm(d) : ''}${f.note_moyenne ? ` · <span class="note-et">★</span> ${f.note_moyenne}` : ''}</div>
+          <div class="meta">${p ? 'Prochain créneau : ' + jour(p.date).toLowerCase() + ' ' + fh(crs[0]) : 'Complet cette semaine'}</div></div>
+        <div class="prix"><small>dès</small>${euros(f.prix_des != null ? f.prix_des : pjFive(f, 60))}<small>/joueur/h</small></div>
       </div>
-      ${auj0.length ? `<div class="creneaux">${auj0.map(h => `<button class="cr" onclick="event.stopPropagation();App.reserver(${js(f.nom)},{date:'${p.d}',h:${h}})">${fh(h)}</button>`).join('')}</div>` : ''}
+      ${crs.length ? `<div class="creneaux">${crs.map(h => `<button class="cr" onclick="event.stopPropagation();App.reserver(${js(f.nom)},{date:'${p.date}',h:${h}})">${fh(h)}</button>`).join('')}</div>` : ''}
     </div>`;
   }
 
@@ -235,7 +218,7 @@ const App = (() => {
     $('voile').classList.remove('ouvert'); $('feuille').classList.remove('ouvert');
     clearInterval(chatT);
   }
-  const tete = (t, s) => `<div class="f-titre"><div><h3>${t}</h3>${s ? `<div class="meta" style="margin-top:4px">${s}</div>` : ''}</div><button class="fermer" onclick="App.fermer()">✕</button></div>`;
+  const tete = (t, s) => `<div class="f-titre"><div><h3>${t}</h3>${s ? `<div class="meta" style="margin-top:4px">${s}</div>` : ''}</div><button class="fermer" aria-label="Fermer" onclick="App.fermer()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`;
 
   // Bloc paiement commun : acompte (1 part) ou tout payer (5 parts)
   let mode = 'acompte';
@@ -260,53 +243,68 @@ const App = (() => {
   // RÉSERVER un five
   // ---------------------------------------------------------------
   const R = {};
-  function reserver(nom, pre) {
+  const NOTE_CAPITAINE = `<div class="encadre"><b>Réserve toujours avec le même compte.</b> C'est le compte du capitaine qui est noté, qui gagne les points et les victoires de l'équipe.</div>`;
+  async function reserver(nom, pre) {
     const f = fives.find(x => x.nom === nom);
     if (!f) return;
-    Object.assign(R, { five: f, date: auj(), h: null, duree: 60, type: 'match', couleur: 'blanc', equipe: localStorage.getItem('md_equipe') || nomJoueur() + ' FC', rejoue: null }, pre || {});
+    Object.assign(R, { five: f, date: (f.prochain && f.prochain.date) || auj(), h: null, duree: null, type: 'match', couleur: 'blanc', equipe: localStorage.getItem('md_equipe') || nomJoueur() + ' FC', rejoue: null, l: null }, pre || {});
     mode = 'acompte';
-    // Premier jour avec un créneau libre
-    if (!pre || !pre.date) for (let i = 0; i < 14; i++) { if (libres(f, decale(i), R.duree, R.type).length) { R.date = decale(i); break; } }
+    await chargerJour();
+  }
+  async function chargerJour() {
+    R.l = null; rendreReserver();
+    try { R.l = await dispo(R.five.nom, R.date, R.type); } catch (e) { R.l = []; toast(e.message, true); }
+    const c = R.l.find(x => x.debut === R.h);
+    if (!c) R.h = null;
+    if (c && !c.options.some(o => o.duree === R.duree)) R.duree = c.options[0].duree;
     rendreReserver();
   }
   function rendreReserver() {
-    const f = R.five, pj = pjFive(f, R.duree), parts = R.type === 'terrain' ? 10 : 5;
-    const l = libres(f, R.date, R.duree, R.type);
-    if (R.h != null && !l.includes(R.h)) R.h = null;
-    const equip = [f.surfaces, f.vestiaires && 'Vestiaires', f.douches && 'Douches', f.parking && 'Parking', f.metro && '🚇 ' + f.metro].filter(Boolean);
+    const f = R.five, parts = R.type === 'terrain' ? 10 : 5, l = R.l;
+    const c = l && R.h != null ? l.find(x => x.debut === R.h) : null;
+    const opt = c ? (c.options.find(o => o.duree === R.duree) || c.options[0]) : null;
+    if (opt) R.duree = opt.duree;
+    const pj = opt ? opt.prix_joueur : 0;
+    const equip = [f.surfaces, f.vestiaires && 'Vestiaires', f.douches && 'Douches', f.parking && 'Parking', f.metro && 'Métro ' + f.metro].filter(Boolean);
     const d = km(f);
     ouvrir(`${tete(esc(f.nom), `${esc(f.adresse || f.lieu || '')}${d != null ? ' · ' + fkm(d) : ''} · <a href="${maps(f)}" target="_blank" rel="noopener">Itinéraire</a>`)}
       ${equip.length ? `<div class="actions" style="margin-top:0">${equip.map(e => `<span class="badge">${esc(e)}</span>`).join('')}</div>` : ''}
-      <div class="etiquette">Tu veux…</div>
+      <div class="etiquette">Type de réservation</div>
       <div class="seg">
-        <button class="${R.type === 'match' ? 'on' : ''}" onclick="App.r({type:'match'})">⚔️ Défier une équipe</button>
-        <button class="${R.type === 'terrain' ? 'on' : ''}" onclick="App.r({type:'terrain'})">🤝 Jouer entre potes</button>
+        <button class="${R.type === 'match' ? 'on' : ''}" onclick="App.r({type:'match'})">Défier une équipe</button>
+        <button class="${R.type === 'terrain' ? 'on' : ''}" onclick="App.r({type:'terrain'})">Entre amis</button>
       </div>
-      <div class="etiquette">Quel jour ?</div>
+      <div class="etiquette">Date</div>
       <div class="jours">${Array.from({ length: 14 }, (_, i) => decale(i)).map(x => {
         const dt = new Date(x + 'T12:00:00');
         return `<button class="jour ${x === R.date ? 'on' : ''}" onclick="App.r({date:'${x}'})"><small>${i0(x)}</small><b>${dt.getDate()}</b></button>`;
       }).join('')}</div>
-      <div class="etiquette" style="display:flex;justify-content:space-between;align-items:center">À quelle heure ?
-        <span class="seg" style="margin:0;padding:3px;width:auto"><button style="padding:5px 10px" class="${R.duree === 60 ? 'on' : ''}" onclick="App.r({duree:60})">1h</button><button style="padding:5px 10px" class="${R.duree === 90 ? 'on' : ''}" onclick="App.r({duree:90})">1h30</button></span></div>
-      ${l.length ? `<div class="grille">${l.map(h => `<button class="cr ${R.h === h ? 'on' : ''}" onclick="App.r({h:${h}})">${fh(h)}</button>`).join('')}</div>`
-        : `<div class="info">${R.type === 'match' ? 'Plus de créneau ce jour-là (un défi doit commencer dans plus de 3h). Essaie un autre jour.' : 'Complet ce jour-là. Essaie un autre jour.'}</div>`}
-      ${R.h != null ? `
-        <div class="etiquette">Ton équipe</div>
+      <div class="etiquette">Horaire</div>
+      ${l == null ? '<div class="grille">' + '<span class="cr charge"></span>'.repeat(8) + '</div>'
+        : l.length ? `<div class="grille">${l.map(x => `<button class="cr ${R.h === x.debut ? 'on' : ''}" onclick="App.r({h:${x.debut}})">${fh(x.debut)}<small>${x.options.map(o => fd(o.duree)).join(' · ')}</small></button>`).join('')}</div>`
+        : `<div class="info">${R.type === 'match' ? 'Plus de créneau ce jour-là. Un défi doit commencer dans plus de 3h.' : 'Complet ce jour-là.'} Essaie un autre jour.</div>`}
+      ${c ? `
+        ${c.options.length > 1 ? `<div class="etiquette">Durée</div>
+        <div class="seg">${c.options.map(o => `<button class="${o.duree === R.duree ? 'on' : ''}" onclick="App.r({duree:${o.duree}})">${fd(o.duree)}<span class="seg-prix">${euros(o.prix_joueur)} / joueur</span></button>`).join('')}</div>`
+        : `<div class="meta" style="margin-top:10px">Créneau de ${fd(opt.duree)}, ${fh(c.debut)} à ${fh(c.debut + opt.duree)}. Le terrain est attribué par le five.</div>`}
+        <div class="etiquette">Nom de l'équipe</div>
         <input class="champ" id="r-equipe" maxlength="40" value="${esc(R.equipe)}" oninput="App.r({equipe:this.value}, true)">
-        ${R.type === 'match' ? `<div class="etiquette">Couleur de vos maillots</div>${couleurs(R.couleur)}` : ''}
+        ${R.type === 'match' ? `<div class="etiquette">Couleur des maillots</div>${couleurs(R.couleur)}` : ''}
         ${blocPaiement(pj, parts)}
-        <div style="height:14px"></div>
-        <button class="btn lime plein" id="r-btn" onclick="App.payerReservation()">Payer ${euros(mode === 'acompte' ? pj : pj * parts)} · ${esc(jour(R.date))} ${fh(R.h)}</button>
-        <div class="note">${R.type === 'match' ? 'Si aucune équipe ne relève ton défi 2h avant, tu es remboursé à 100 %. ' : ''}Annulation gratuite jusqu'à 24h avant le match.</div>` : ''}
+        ${NOTE_CAPITAINE}
+        <button class="btn lime plein" id="r-btn" onclick="App.payerReservation()">Payer ${euros(mode === 'acompte' ? pj : pj * parts)}</button>
+        <div class="note">${esc(jour(R.date, true))}, ${fh(c.debut)} à ${fh(c.debut + opt.duree)}. ${R.type === 'match' ? 'Sans adversaire 2h avant, tu es remboursé intégralement. ' : ''}Annulation gratuite jusqu'à 24h avant.</div>` : ''}
     `);
   }
+  const fd = d => d % 60 ? Math.floor(d / 60) + 'h' + String(d % 60).padStart(2, '0') : d / 60 + 'h';
   const i0 = x => x === auj() ? 'Auj.' : x === decale(1) ? 'Dem.' : new Date(x + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '');
   function r(maj, silencieux) {
-    if (maj.type || maj.date || maj.duree) maj.h = maj.h != null ? maj.h : null;
+    if (maj.type || maj.date) maj.h = maj.h != null ? maj.h : null;
     Object.assign(R, maj);
     if (maj.equipe != null) localStorage.setItem('md_equipe', maj.equipe);
     if (silencieux) return;
+    if (maj.type || maj.date) return chargerJour();
+    if (maj.h != null) { const c = (R.l || []).find(x => x.debut === maj.h); if (c && !c.options.some(o => o.duree === R.duree)) R.duree = c.options[0].duree; }
     const y = $('feuille').scrollTop;
     rendreReserver();
     $('feuille').scrollTop = maj.h != null ? $('feuille').scrollHeight : y;
@@ -322,7 +320,7 @@ const App = (() => {
       });
       const pay = await post('/api/checkout', { role: 'creer', matchId: rep.match.id, mode });
       location.href = pay.url;
-    } catch (e) { toast(e.message, true); b.disabled = false; rendreReserver(); }
+    } catch (e) { toast(e.message, true); viderDispo(); b.disabled = false; chargerJour(); }
   }
 
   // ---------------------------------------------------------------
@@ -341,11 +339,11 @@ const App = (() => {
     ouvrir(`${tete('Relever le défi', `${esc(jour(m.date_iso, true))}${min != null ? ' · ' + fh(min) + '–' + fh(min + (m.duree || 60)) : ''}`)}
       <div class="carte">
         <div class="meta">Ton adversaire</div>
-        <div class="nom" style="font-size:22px;font-family:'Barlow Condensed',sans-serif;font-weight:900;text-transform:uppercase">${esc(m.equipe1)}</div>
+        <div class="nom" style="font-size:20px">${esc(m.equipe1)}</div>
         <div class="actions" style="margin-top:6px">
           <span class="badge ${m.niveau === 'Avancé' ? 'rouge' : 'bleu'}">${esc(m.niveau || 'Tous niveaux')}</span>
           <span class="badge">${s.joues ? s.joues + ' matchs' : 'Nouvelle équipe'}</span>
-          ${s.note ? `<span class="badge">★ ${s.note} fair-play</span>` : ''}
+          ${s.note ? `<span class="badge"><span class="note-et">★</span> ${s.note} fair-play</span>` : ''}
           ${s.joues ? `<span class="badge">${s.annulations || 0} annulation${s.annulations > 1 ? 's' : ''}</span>` : ''}
         </div>
       </div>
@@ -354,7 +352,7 @@ const App = (() => {
       <input class="champ" id="d-equipe" maxlength="40" value="${esc(D.equipe)}" oninput="App.d({equipe:this.value})">
       <div class="etiquette">Couleur de vos maillots</div>${couleurs(D.couleur, m.couleur1)}
       ${blocPaiement(pj, 5)}
-      <div style="height:14px"></div>
+      ${NOTE_CAPITAINE}
       <button class="btn lime plein" id="d-btn" onclick="App.payerDefi()">Payer ${euros(mode === 'acompte' ? pj : pj * 5)} et jouer</button>
       <div class="note">Annulation gratuite jusqu'à 24h avant. Si une autre équipe est plus rapide, tu es remboursé.</div>`);
   }
@@ -386,33 +384,33 @@ const App = (() => {
       <div class="titre">Mes <em>matchs</em></div><div style="height:12px"></div>
       <div class="seg"><button class="${ongletMes === 'avenir' ? 'on' : ''}" onclick="App.ongletMes('avenir')">À venir (${avenir.length})</button><button class="${ongletMes === 'passes' ? 'on' : ''}" onclick="App.ongletMes('passes')">Passés</button></div>
       ${liste.length ? liste.map(carteMien).join('') : ongletMes === 'avenir'
-        ? vide('⚽', 'Aucun match prévu', 'Réserve un five ou relève un défi.', `<button class="btn lime" onclick="App.aller('jouer')">Trouver un five</button>`)
-        : vide('🏆', 'Pas encore de match joué', 'Ton historique s\'affichera ici.')}
+        ? vide('', 'Aucun match prévu', 'Réserve un five ou relève un défi.', `<button class="btn lime" onclick="App.aller('jouer')">Trouver un five</button>`)
+        : vide('', 'Pas encore de match joué', 'Ton historique s\'affichera ici.')}
     </div>`;
   }
 
   function carteMien(m) {
     const f = fives.find(x => x.nom === m.terrain), min = minutesDebut(m.heure);
     const adv = m.type === 'terrain' ? 'Entre potes' : (m.ma_equipe === 2 ? m.equipe1 : m.equipe2);
-    const statut = { pending_payment: '<span class="badge">Paiement en cours</span>', open: '<span class="badge lime">En attente d\'adversaire</span>', confirmed: '<span class="badge noir">Confirmé ✓</span>', cancelled: '<span class="badge rouge">Annulé</span>' }[m.statut] || '';
+    const statut = { pending_payment: '<span class="badge">Paiement en cours</span>', open: '<span class="badge lime">En attente d\'adversaire</span>', confirmed: '<span class="badge noir">Confirmé</span>', cancelled: '<span class="badge rouge">Annulé</span>' }[m.statut] || '';
     const fini = passe(m), joue = m.statut === 'confirmed' && fini && m.type !== 'terrain';
     const b = [];
     if (!fini && m.statut !== 'cancelled') {
-      if (m.statut === 'confirmed' && m.type !== 'terrain') b.push(`<button class="btn petit" onclick="App.chat(${js(m.id)})">💬 Chat</button>`);
-      if (m.statut === 'open' && m.capitaine) b.push(`<button class="btn petit lime" onclick="App.partager(${js(m.id)})">📣 Trouver un adversaire</button>`);
-      b.push(`<a class="btn petit clair" href="${maps(f, m)}" target="_blank" rel="noopener">🗺️ Y aller</a>`);
-      b.push(`<button class="btn petit clair" onclick="App.agenda(${js(m.id)})">📅 Agenda</button>`);
+      if (m.statut === 'confirmed' && m.type !== 'terrain') b.push(`<button class="btn petit" onclick="App.chat(${js(m.id)})">Messages</button>`);
+      if (m.statut === 'open' && m.capitaine) b.push(`<button class="btn petit lime" onclick="App.partager(${js(m.id)})">Trouver un adversaire</button>`);
+      b.push(`<a class="btn petit clair" href="${maps(f, m)}" target="_blank" rel="noopener">Itinéraire</a>`);
+      b.push(`<button class="btn petit clair" onclick="App.agenda(${js(m.id)})">Agenda</button>`);
       if (m.capitaine && (m.statut === 'open' || m.statut === 'confirmed')) b.push(`<button class="btn petit danger" onclick="App.annuler(${js(m.id)})">Annuler</button>`);
     }
     if (joue) {
       if (!m.score_valide && m.capitaine) b.push(`<button class="btn petit lime" onclick="App.score(${js(m.id)})">${m.score1 != null ? 'Valider le score' : 'Saisir le score'}</button>`);
-      if (!m.a_note && m.capitaine) b.push(`<button class="btn petit" onclick="App.noter(${js(m.id)})">⭐ Noter</button>`);
+      if (!m.a_note && m.capitaine) b.push(`<button class="btn petit" onclick="App.noter(${js(m.id)})">Noter</button>`);
     }
-    if (fini && m.statut === 'confirmed' && m.capitaine) b.push(`<button class="btn petit clair" onclick="App.rejouer(${js(m.id)})">🔁 Rejouer</button>`);
+    if (fini && m.statut === 'confirmed' && m.capitaine) b.push(`<button class="btn petit clair" onclick="App.rejouer(${js(m.id)})">Rejouer</button>`);
     const score = m.score1 != null ? `<span class="badge lime" style="font-size:14px">${m.score1} - ${m.score2}${m.score_valide ? '' : ' ?'}</span>` : '';
     return `<div class="carte">
       <div class="ligne" style="justify-content:space-between"><div class="meta" style="font-weight:700;text-transform:capitalize">${esc(jour(m.date_iso, true))}${min != null ? ' · ' + fh(min) : ''}</div>${statut}</div>
-      <div class="nom" style="margin-top:8px">${esc(m.terrain)}</div>
+      <div class="nom" style="margin-top:8px">${esc(m.terrain)}${m.terrain_nom ? `<span class="terrain-nom">${esc(m.terrain_nom)}</span>` : ''}</div>
       <div class="vs">${esc(m.ma_equipe === 2 ? m.equipe2 : m.equipe1)} <span>vs</span> ${esc(adv || 'en attente…')} ${score}</div>
       ${m.statut === 'open' && !fini ? `<div class="info">On te prévient dès qu'une équipe relève le défi. Sans adversaire 2h avant, tu es remboursé.</div>` : ''}
       ${m.statut === 'confirmed' && !fini && m.type !== 'terrain' ? `<div class="meta" style="margin-top:8px">Maillots : vous en ${esc(m.ma_equipe === 2 ? m.couleur2 || '—' : m.couleur1 || '—')}, eux en ${esc(m.ma_equipe === 2 ? m.couleur1 || '—' : m.couleur2 || '—')}</div>` : ''}
@@ -424,7 +422,7 @@ const App = (() => {
   function partager(id) {
     const m = mien(id); if (!m) return;
     const min = minutesDebut(m.heure);
-    const txt = `⚽ On cherche une équipe pour un five ${jour(m.date_iso, true).toLowerCase()}${min != null ? ' à ' + fh(min) : ''} au ${m.terrain}. Chauds ?`;
+    const txt = `On cherche une équipe pour un five ${jour(m.date_iso, true).toLowerCase()}${min != null ? ' à ' + fh(min) : ''} au ${m.terrain}. Chauds ?`;
     const url = location.origin + '/app?match=' + m.id;
     if (navigator.share) navigator.share({ title: 'Matchday', text: txt, url }).catch(() => {});
     else window.open('https://wa.me/?text=' + encodeURIComponent(txt + '\n' + url), '_blank');
@@ -442,7 +440,7 @@ const App = (() => {
     const m = mien(id); if (!m) return;
     const h = hAvant(m), ok = h == null || h >= 24;
     ouvrir(`${tete('Annuler ?', esc(m.terrain) + ' · ' + esc(jour(m.date_iso, true)))}
-      <div class="info ${ok ? '' : 'rouge'}">${ok ? '✅ Plus de 24h avant : tout ce que tu as payé est remboursé.' : '❌ Moins de 24h avant : ce que tu as payé n\'est pas remboursé.'}${m.statut === 'confirmed' && m.type !== 'terrain' ? ' L\'autre équipe est prévenue et remboursée.' : ''}</div>
+      <div class="info ${ok ? '' : 'rouge'}">${ok ? 'Plus de 24h avant : tout ce que tu as payé est remboursé.' : 'Moins de 24h avant : ce que tu as payé n\'est pas remboursé.'}${m.statut === 'confirmed' && m.type !== 'terrain' ? ' L\'autre équipe est prévenue et remboursée.' : ''}</div>
       <div style="height:16px"></div>
       <button class="btn plein" style="background:var(--red)" id="a-btn" onclick="App.confirmerAnnulation(${js(id)})">Oui, annuler le match</button>
       <div style="height:8px"></div><button class="btn clair plein" onclick="App.fermer()">Garder le match</button>`);
@@ -465,9 +463,9 @@ const App = (() => {
   let chatId = null, chatT = null;
   async function chat(id) {
     chatId = id; const m = mien(id);
-    ouvrir(`${tete('💬 Chat', esc(m ? (m.ma_equipe === 2 ? m.equipe1 : m.equipe2) + ' · ' + m.terrain : ''))}
+    ouvrir(`${tete(esc(m ? (m.ma_equipe === 2 ? m.equipe1 : m.equipe2) : 'Messages'), esc(m ? m.terrain + ' · ' + jour(m.date_iso) : ''))}
       <div class="msgs" id="msgs"><div class="meta">Chargement…</div></div>
-      <form class="saisie" onsubmit="event.preventDefault(); App.envoyer()"><input class="champ" id="c-txt" placeholder="Ton message…" maxlength="1000" autocomplete="off"><button class="btn lime">➤</button></form>`);
+      <form class="saisie" onsubmit="event.preventDefault(); App.envoyer()"><input class="champ" id="c-txt" placeholder="Ton message…" maxlength="1000" autocomplete="off"><button class="btn lime envoi" aria-label="Envoyer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>`);
     await lireChat(); clearInterval(chatT); chatT = setInterval(lireChat, 5000);
   }
   async function lireChat() {
@@ -476,7 +474,7 @@ const App = (() => {
       const l = await api('/api/matchs?chat=' + encodeURIComponent(chatId)), box = $('msgs');
       const bas = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
       box.innerHTML = l.length ? l.map(x => `<div class="msg ${x.moi ? 'moi' : ''}">${x.moi ? '' : `<div class="de">${esc(x.de)}</div>`}${esc(x.texte)}<small>${new Date(x.created_at).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</small></div>`).join('')
-        : '<div class="meta" style="text-align:center;padding:30px 0">Dis bonjour 👋 (retard, ballon, maillots…)</div>';
+        : '<div class="meta" style="text-align:center;padding:30px 0">Aucun message. Écris à l\'autre capitaine : retard, ballon, maillots.</div>';
       if (bas) box.scrollTop = box.scrollHeight;
     } catch (e) {}
   }
@@ -502,7 +500,7 @@ const App = (() => {
   async function envoyerScore(id) {
     const s1 = parseInt($('s1').value, 10), s2 = parseInt($('s2').value, 10);
     if (isNaN(s1) || isNaN(s2)) return toast('Score incomplet', true);
-    try { const r2 = await post('/api/matchs', { action: 'score', matchId: id, score1: s1, score2: s2 }); fermer(); toast(r2.valide ? '✅ Score validé par les deux équipes' : 'Envoyé · en attente de l\'adversaire'); vueMes(); }
+    try { const r2 = await post('/api/matchs', { action: 'score', matchId: id, score1: s1, score2: s2 }); fermer(); toast(r2.valide ? 'Score validé par les deux équipes' : 'Envoyé · en attente de l\'adversaire'); vueMes(); }
     catch (e) { toast(e.message, true); }
   }
 
@@ -522,7 +520,7 @@ const App = (() => {
   function etoile(k, v) { N[k] = v; document.querySelectorAll(`.etoiles[data-k="${k}"] button`).forEach((b, i) => b.classList.toggle('on', i < v)); }
   async function envoyerNote() {
     if (!N.adv) return toast('Note l\'équipe adverse', true);
-    try { await post('/api/notations', { match_id: N.id, note: N.adv, note_five: N.five || null, commentaire: $('n-com').value.trim() }); fermer(); toast('⭐ Merci !'); vueMes(); }
+    try { await post('/api/notations', { match_id: N.id, note: N.adv, note_five: N.five || null, commentaire: $('n-com').value.trim() }); fermer(); toast('Merci pour ton avis'); vueMes(); }
     catch (e) { toast(e.message, true); }
   }
 
@@ -545,9 +543,9 @@ const App = (() => {
         <select class="champ" style="padding:11px" onchange="App.cl({mois:this.value})"><option value="">Toute la saison</option>${mois.map(m => `<option value="${m}" ${m === CL.mois ? 'selected' : ''}>${new Date(m + '-15').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</option>`).join('')}</select>
         <select class="champ" style="padding:11px" onchange="App.cl({ville:this.value})"><option value="">Toutes les villes</option>${(r2.villes || []).map(x => `<option ${x === CL.ville ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
       </div>
-      <div class="seg"><button class="${CL.tri === 'points' ? 'on' : ''}" onclick="App.cl({tri:'points'})">🏆 Points</button><button class="${CL.tri === 'note' ? 'on' : ''}" onclick="App.cl({tri:'note'})">🤝 Fair-play</button></div>
-      <div class="carte">${j.length ? j.slice(0, 50).map((x, i) => `<div class="rang ${x.moi ? 'moi' : ''} ${i < 3 ? 'podium' : ''}"><span class="n">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span><div class="grow"><div class="nom" style="font-size:15px">${esc(x.nom)}${x.moi ? ' (toi)' : ''}</div><div class="meta">${esc(x.niveau)} · ${x.matchs} match${x.matchs > 1 ? 's' : ''}</div></div><span class="v">${CL.tri === 'note' ? '★ ' + x.note : x.points + ' pts'}</span></div>`).join('')
-        : vide('🏆', 'Personne pour l\'instant', CL.tri === 'note' ? 'Il faut au moins 2 avis pour apparaître.' : 'Joue un match pour entrer au classement.')}</div>
+      <div class="seg"><button class="${CL.tri === 'points' ? 'on' : ''}" onclick="App.cl({tri:'points'})">Points</button><button class="${CL.tri === 'note' ? 'on' : ''}" onclick="App.cl({tri:'note'})">Fair-play</button></div>
+      <div class="carte">${j.length ? j.slice(0, 50).map((x, i) => `<div class="rang ${x.moi ? 'moi' : ''} ${i < 3 ? 'podium' : ''}"><span class="n">${i + 1}</span><div class="grow"><div class="nom" style="font-size:15px">${esc(x.nom)}${x.moi ? ' (toi)' : ''}</div><div class="meta">${esc(x.niveau)} · ${x.matchs} match${x.matchs > 1 ? 's' : ''}</div></div><span class="v">${CL.tri === 'note' ? '<span class="note-et">★</span> ' + x.note : x.points + ' pts'}</span></div>`).join('')
+        : vide('', 'Personne pour l\'instant', CL.tri === 'note' ? 'Il faut au moins 2 avis pour apparaître.' : 'Joue un match pour entrer au classement.')}</div>
     </div>`;
   }
   function cl(maj) { Object.assign(CL, maj); vueClassement(); }
@@ -570,9 +568,9 @@ const App = (() => {
       <div class="profil-tete">
         <div class="avatar">${esc(nomJoueur().slice(0, 2).toUpperCase())}</div>
         <div class="grow">
-          <div class="nom" style="font-size:20px">${esc(nomJoueur())} <button onclick="App.pseudo()" style="color:var(--lime);font-size:13px">✎</button></div>
-          <div style="color:rgba(255,255,255,.55);font-size:13px">${esc(s.email)}</div>
-          <div class="niv"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700"><span style="color:var(--lime)">${esc(st.niveau || 'Débutant')}</span><span style="color:rgba(255,255,255,.5)">${st.prochain_niveau ? 'vers ' + esc(st.prochain_niveau) : 'Niveau max'}</span></div><div class="barre"><div style="width:${pct}%"></div></div></div>
+          <div class="nom" style="font-size:20px">${esc(nomJoueur())} <button onclick="App.pseudo()" class="lien-mod">Modifier</button></div>
+          <div style="color:var(--muted);font-size:13px">${esc(s.email)}</div>
+          <div class="niv"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700"><span style="color:var(--lime)">${esc(st.niveau || 'Débutant')}</span><span style="color:var(--muted)">${st.prochain_niveau ? 'vers ' + esc(st.prochain_niveau) : 'Niveau max'}</span></div><div class="barre"><div style="width:${pct}%"></div></div></div>
         </div>
       </div>
       <div class="stats">
@@ -584,17 +582,17 @@ const App = (() => {
       <div class="section"><h2>Badges</h2></div>
       <div class="badges">${(st.badges || []).map(b => `<div class="bdg ${b.ok ? '' : 'off'}" title="${esc(b.desc)}"><i>${esc(b.icone)}</i>${esc(b.nom)}</div>`).join('')}</div>
 
-      <div class="section"><h2>🔔 Alertes</h2><button class="btn petit lime" onclick="App.alerte()">+ Ajouter</button></div>
-      <div class="carte">${alertes.length ? alertes.map(a => `<div class="ligne" style="padding:6px 0"><div class="grow meta" style="color:var(--ink)">${(a.jours || []).length < 7 ? a.jours.map(x => JOURS[x - 1]).join(', ') : 'Tous les jours'}${a.heure_min ? ' · après ' + fh(a.heure_min) : ''}${a.niveau ? ' · ' + esc(a.niveau) : ''}${a.ville ? ' · ' + esc(a.ville) : ''}</div><button class="btn petit clair" onclick="App.supprAlerte(${js(a.id)})">✕</button></div>`).join('')
+      <div class="section"><h2>Alertes</h2><button class="btn petit lime" onclick="App.alerte()">+ Ajouter</button></div>
+      <div class="carte">${alertes.length ? alertes.map(a => `<div class="ligne" style="padding:6px 0"><div class="grow meta" style="color:var(--ink)">${(a.jours || []).length < 7 ? a.jours.map(x => JOURS[x - 1]).join(', ') : 'Tous les jours'}${a.heure_min ? ' · après ' + fh(a.heure_min) : ''}${a.niveau ? ' · ' + esc(a.niveau) : ''}${a.ville ? ' · ' + esc(a.ville) : ''}</div><button class="btn petit clair" onclick="App.supprAlerte(${js(a.id)})">Supprimer</button></div>`).join('')
         : '<div class="meta">On te prévient quand une équipe publie un match qui te va.</div>'}
-        <div class="actions"><button class="btn petit ${push ? 'clair' : ''}" onclick="App.push()" ${push ? 'disabled' : ''}>${push ? '✓ Notifications activées' : 'Activer les notifications'}</button></div>
+        <div class="actions"><button class="btn petit ${push ? 'clair' : ''}" onclick="App.push()" ${push ? 'disabled' : ''}>${push ? 'Notifications activées' : 'Activer les notifications'}</button></div>
       </div>
 
-      <div class="section"><h2>💳 Paiements</h2><small>${pays.length}</small></div>
+      <div class="section"><h2>Paiements</h2><small>${pays.length}</small></div>
       <div class="carte">${pays.length ? pays.slice(0, 10).map(x => `<div class="ligne" style="padding:6px 0"><div class="grow"><div style="font-weight:600;font-size:14px">${esc(x.terrain || 'Match')}</div><div class="meta">${esc(jour(x.date_iso))} · ${x.mode === 'total' ? 'Tout payé' : 'Acompte'}</div></div><div class="prix" style="font-size:15px">${euros(x.montant / 100)}<small>${x.statut === 'rembourse' ? 'Remboursé' : 'Payé'}</small></div></div>`).join('') : '<div class="meta">Aucun paiement pour l\'instant.</div>'}</div>
 
       <div class="carte liste">
-        ${installable ? '<button onclick="App.installer()">📲 Installer l\'app <span>›</span></button>' : ''}
+        ${installable ? '<button onclick="App.installer()">Installer l\'app <span>›</span></button>' : ''}
         <a href="/">Comment ça marche <span>›</span></a>
         <a href="/cgu">CGU et confidentialité <span>›</span></a>
         <a href="/contact">Contact <span>›</span></a>
@@ -615,7 +613,7 @@ const App = (() => {
   const A = { jours: [1, 2, 3, 4, 5, 6, 7], heure: 18 * 60, niveau: '' };
   function alerte() {
     const J = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-    ouvrir(`${tete('🔔 Me prévenir', 'Un mail (et une notif) dès qu\'un match qui te va est publié.')}
+    ouvrir(`${tete('Me prévenir', 'Un mail (et une notif) dès qu\'un match qui te va est publié.')}
       <div class="etiquette">Quels jours ?</div>
       <div class="jours">${J.map((j, i) => `<button class="jour ${A.jours.includes(i + 1) ? 'on' : ''}" style="width:auto;padding:10px 12px" onclick="App.aj(${i + 1})"><b style="font-size:15px">${j}</b></button>`).join('')}</div>
       <div class="etiquette">À partir de</div>
@@ -628,7 +626,7 @@ const App = (() => {
   function al(m) { Object.assign(A, m); }
   async function creerAlerte() {
     if (!A.jours.length) return toast('Choisis au moins un jour', true);
-    try { await post('/api/alertes', { jours: A.jours, heure_min: A.heure, niveau: A.niveau || null }); fermer(); toast('🔔 Alerte créée'); if ('Notification' in window && Notification.permission === 'default') setTimeout(push, 600); if (vueActive === 'profil') vueProfil(); }
+    try { await post('/api/alertes', { jours: A.jours, heure_min: A.heure, niveau: A.niveau || null }); fermer(); toast('Alerte créée'); if ('Notification' in window && Notification.permission === 'default') setTimeout(push, 600); if (vueActive === 'profil') vueProfil(); }
     catch (e) { toast(e.message, true); }
   }
   async function supprAlerte(id) { try { await api('/api/alertes?id=' + encodeURIComponent(id), { method: 'DELETE' }); vueProfil(); } catch (e) { toast(e.message, true); } }
@@ -647,7 +645,7 @@ const App = (() => {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: Uint8Array.from([...raw].map(c => c.charCodeAt(0))) });
       await post('/api/alertes', { action: 'push', subscription: sub.toJSON() });
-      toast('🔔 Notifications activées'); if (vueActive === 'profil') vueProfil();
+      toast('Notifications activées'); if (vueActive === 'profil') vueProfil();
     } catch (e) { toast(e.message || 'Erreur', true); }
   }
 
@@ -713,14 +711,14 @@ const App = (() => {
 
     if (paiement === 'cancel') return toast('Paiement annulé, rien n\'a été débité');
     if (paiement === 'success' && matchId) {
-      toast('✅ Paiement reçu, confirmation…');
+      toast('Paiement reçu, confirmation…');
       for (let i = 0; i < 10; i++) {
         await new Promise(r3 => setTimeout(r3, 1500));
         await chargerMes();
         const m = mien(matchId);
         if (m && m.statut !== 'pending_payment') {
           aller('mes');
-          return toast(m.statut === 'confirmed' ? (m.type === 'terrain' ? '✅ Five réservé !' : '🔥 Match confirmé !') : m.statut === 'cancelled' ? 'Match annulé et remboursé' : '✅ Réservé ! On te prévient dès qu\'une équipe relève le défi');
+          return toast(m.statut === 'confirmed' ? (m.type === 'terrain' ? 'Five réservé' : 'Match confirmé') : m.statut === 'cancelled' ? 'Match annulé et remboursé' : 'Réservé. On te prévient dès qu\'une équipe relève le défi');
         }
       }
       return aller('mes');
@@ -732,7 +730,7 @@ const App = (() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
     const p = new URLSearchParams(location.search);
     if (p.get('verifier')) {
-      try { await post('/api/auth', { action: 'verifier', token: p.get('verifier') }); toast('✅ Email confirmé, tu peux te connecter'); }
+      try { await post('/api/auth', { action: 'verifier', token: p.get('verifier') }); toast('Email confirmé, tu peux te connecter'); }
       catch (e) { toast(e.message, true); }
       history.replaceState({}, '', location.pathname);
     }
