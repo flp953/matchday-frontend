@@ -363,7 +363,8 @@
       // Créneaux bloqués par le gérant (réservations faites en direct au five)
       .concat((f.bloques || []).filter(b => b.date === iso).map(b => { const d = MD.minutesDebut(b.heure); return d == null ? null : [d, d + (b.duree || 60)]; }).filter(Boolean));
     const maintenant = new Date(), auj = MD.aujourdhui();
-    const minNow = maintenant.getHours() * 60 + maintenant.getMinutes() + 60;
+    // Défi : au moins 3h pour laisser une équipe répondre. Terrain entre potes : 1h.
+    const minNow = maintenant.getHours() * 60 + maintenant.getMinutes() + (C.type === 'terrain' ? 60 : 180);
     const res = [];
     for (let h = ouv; h + duree <= ferm; h += 30) {
       if (iso === auj && h < minNow) continue;
@@ -418,7 +419,7 @@
     const corps = MD.corps('creer2');
     corps.querySelectorAll('#cr-type .md-seg-btn').forEach(b => b.addEventListener('click', () => {
       corps.querySelectorAll('#cr-type .md-seg-btn').forEach(x => x.classList.remove('sel'));
-      b.classList.add('sel'); C.type = b.dataset.type; majDetails();
+      b.classList.add('sel'); C.type = b.dataset.type; C.debut = null; renderFivesCreation(); majDetails();
     }));
     corps.querySelectorAll('#cr-jours .md-jour-btn').forEach(b => b.addEventListener('click', () => {
       corps.querySelectorAll('#cr-jours .md-jour-btn').forEach(x => x.classList.remove('sel'));
