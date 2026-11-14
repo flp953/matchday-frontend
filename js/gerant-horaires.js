@@ -91,6 +91,7 @@
     const titre = page.querySelector('.page-title'); if (titre) titre.innerHTML = 'Terrains <em>&amp; horaires</em>';
     const zone = page.querySelector('.content-area');
     if (!five()) { zone.innerHTML = '<div class="gh"><div class="gh-aide">Sélectionnez un five.</div></div>'; return; }
+    S.five = five();
     zone.innerHTML = '<div class="gh"><div class="gh-aide">Chargement…</div></div>';
     try { await charger(); } catch (e) { zone.innerHTML = `<div class="gh"><div class="gh-aide">${esc(e.message)}</div></div>`; return; }
     rendre();
@@ -382,9 +383,12 @@
   const ancienLoadData = window.loadData;
   if (typeof ancienLoadData === 'function') {
     window.loadData = async function () {
+      const avant = S.five;
       const r = await ancienLoadData.apply(this, arguments);
+      // La synchro automatique recharge les données toutes les 10 s :
+      // on ne redessine que si le gérant a changé de five, sinon on perdrait sa saisie.
       const page = document.getElementById('page-terrains');
-      if (page && page.classList.contains('active')) window.loadTerrains();
+      if (page && page.classList.contains('active') && five() !== avant) window.loadTerrains();
       return r;
     };
   }
